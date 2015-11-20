@@ -10,6 +10,7 @@
     "target": "development"
   },
   "dependencies": {
-    "fs-jetpack": "^0.7.0"
+    "fs-jetpack": "^0.7.0",
+    "rx": "^4.0.7"
   }
 }

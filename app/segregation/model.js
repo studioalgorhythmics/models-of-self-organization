@@ -1,0 +1,300 @@
+
+/*
+  Derived from https://github.com/mattwigway/segregation.js
+   Copyright 2013 Matthew Wigginton Conway
+   Apache License, Version 2.0
+*/
+var rx = require('rx');
+
+export default class SegregationModel extends rx.Subject {
+
+  constructor(size, tolerance, n1, n2) {
+    super();
+    this.init(size, tolerance, n1, n2);
+  }
+
+  init(size, tolerance, n1, n2) {
+    this.size = Number(size);
+    this.tolerance = Number(tolerance);
+
+    // Make them integers
+    n1 = Math.round(n1);
+    n2 = Math.round(n2);
+
+    // >= because there must always be one empty cell for an unhappy cell to move to
+    if (n1 + n2 >= Math.pow(this.size, 2)) {
+      // send stream error
+      console.log('Number of agents must be smaller than number of cells!');
+      return false;
+    }
+
+    // initialize matrix
+    this.matrixLen = Math.pow(size, 2);
+    this.matrix = new Int8Array(this.matrixLen);
+    // initialize to zero
+    for (var i = 0; i < this.matrixLen; i++) {
+      this.matrix[i] = 0;
+    }
+
+    // populate matrix
+    var balance = n1 / (n1 + n2);
+    var c1 = 0;
+    var c2 = 0;
+    for (var ii = 0; ii < n1 + n2; ii++) {
+      var cell  = this.getVacantCell();
+
+      if (c1 < n1 && c2 < n2) {
+        if (Math.random() < balance) {
+          this.matrix[cell] = 1;
+          c1++;
+        } else {
+          this.matrix[cell] = 2;
+          c2++;
+        }
+      } else if (c1 < n1) {
+        this.matrix[cell] = 1;
+        c1++;
+      } else if (c2 < n2) {
+        this.matrix[cell] = 2;
+        c2++;
+      } else {
+        console.log('Distribution error: counts equal to n' +
+          'but loop still running');
+        return false;
+      }
+    }
+
+    if (c1 !== n1 || c2 !== n2) {
+      console.log('Distribution error: distribution does not match specified');
+      return false;
+    }
+
+    // populate cell caches
+    // cache unhappy cells
+    this.cellStatus = new Int8Array(this.matrixLen);
+    // cache percent alike
+    // stored as 16-bit ints, with 0 being 0% alike and 65535 being 100% alike.
+    this.percentAlike = new Uint16Array(this.matrixLen);
+
+    for (var iii = 0; iii < this.matrixLen; iii++) {
+      this.cellStatus[iii] = this.getCellStatus(iii);
+      this.percentAlike[iii] = Math.round(this.getCellAlike(iii) * 65535);
+    }
+  }
+
+  /**
+   * @returns {boolean} - is everybody happy ?
+   */
+  next() {
+    // find an unhappy cell
+    var orig = this.getUnhappyCell();
+
+    if (orig === undefined) {
+      // console.log('Everyone is happy!');
+      // well, except for the poor people.
+      // the rich people won !
+      this.onCompleted();
+      return false;
+    }
+
+    // find a vacant cell to move to
+    var dest = this.getVacantCell();
+
+    // move
+    this.matrix[dest] = this.matrix[orig];
+    // vacate the original
+    this.matrix[orig] = 0;
+
+    // update cache
+    var neighbors = this.getNeighbors(orig).concat(this.getNeighbors(dest));
+    neighbors.push(orig);
+    neighbors.push(dest);
+
+    var cells = [];
+    // 18 ?  TODO(crucialfelix): check original paper
+    for (var i = 0; i < 18; i++) {
+      var cell = neighbors[i];
+      // changed ones are here
+      var newStatus = this.getCellStatus(cell);
+      var changed = this.cellStatus[cell] !== newStatus;
+      this.cellStatus[cell] = newStatus;
+      var percentAlike = Math.round(this.getCellAlike(cell) * 65535);
+      this.percentAlike[cell] = percentAlike;
+
+      if (changed) {
+        cells.push({
+          cell: cell,
+          status: newStatus,
+          percentAlike: percentAlike
+        });
+      }
+    }
+    this.onNext({
+      changed: cells
+    });
+    return true;
+  }
+
+  randomDraw(arr) {
+    return arr[Math.floor(Math.random() * (arr.length))];
+  }
+
+  getVacantCell() {
+    var vacantCells = [];
+
+    for (var i = 0; i < this.matrixLen; i++) {
+      if (this.matrix[i] === 0) {
+        vacantCells.push(i);
+      }
+    }
+
+    return this.randomDraw(vacantCells);
+  }
+
+  getUnhappyCell() {
+    var unhappyCells = [];
+    for (var i = 0; i < this.matrixLen; i++) {
+      if (this.cellStatus[i] === 2) {
+        unhappyCells.push(i);
+      }
+    }
+
+    return this.randomDraw(unhappyCells);
+  }
+
+  isCellUnhappy(cell) {
+    return this.getCellAlike(cell) < this.tolerance;
+  }
+
+  /**
+    * Get the cell indices of a cell's neighbors, correcting for edge effects
+    */
+  getNeighbors(cell) {
+    var coords = this.getCoordinatesForCell(cell);
+    var r = coords.row;
+    var c = coords.col;
+    var neighbors = [
+        [r - 1, c],
+        [r - 1, c + 1],
+        [r, c + 1],
+        [r + 1, c + 1],
+        [r + 1, c],
+        [r + 1, c - 1],
+        [r, c - 1],
+        [r - 1, c - 1]
+    ];
+
+    var ret = [];
+
+    for (var i = 0; i < 8; i++) {
+      var nb = neighbors[i];
+      // correct edge effects
+      nb = [this.torus(nb[0]), this.torus(nb[1])];
+      ret.push(this.getCellForCoordinates(nb[0], nb[1]));
+    }
+
+    return ret;
+  }
+
+  /**
+   * Index to coordinates
+   *
+   * @param {int} i - The cell
+   * @returns {Object} - {row: <int>, col: <int>}
+   */
+  getCoordinatesForCell(i) {
+    var row = Math.floor(i / this.size);
+    var col = i % this.size;
+    return {row: row, col: col};
+  }
+
+  /**
+   * Coordinates to index
+   */
+  getCellForCoordinates(row, col) {
+    return row * this.size + col;
+  }
+
+  /**
+   * Get the status of a cell
+   *
+   * @param {int} i the cell
+   * @returns {number} - 0 if vacant, 1 if happy, 2 if unhappy
+   */
+  getCellStatus(i) {
+    if (this.matrix[i] === 0) {
+      return 0;
+    } else {
+      return this.isCellUnhappy(i) ? 2 : 1;
+    }
+  }
+
+/**
+ * Get the percent-alike of a cell, as a float in [0, 1].
+ * @param {int} cell - The cell
+ * @returns {int} - amount alike
+ */
+  getCellAlike(cell) {
+    var thisCell = this.matrix[cell];
+
+    var like = 0;
+    var total = 0;
+
+    var neighbors = this.getNeighbors(cell);
+
+    for (var i = 0; i < 8; i++) {
+      var cellValue = this.matrix[neighbors[i]];
+      if (cellValue !== 0) {
+        total++;
+        if (cellValue === thisCell) {
+          like++;
+        }
+      }
+    }
+    return like / total;
+  }
+
+  torus(i) {
+    if (i < 0) {
+      return this.size + i;
+    }
+    if (i >= this.size) {
+      return i - this.size;
+    }
+    return i;
+  }
+
+  /**
+   * Get the average percent alike for all cells
+   */
+  getMeanPercentAlike() {
+    var accumulator = 0;
+    var total = 0;
+    for (var i = 0; i < this.matrixLen; i++) {
+      if (this.matrix[i] === 0) {
+        continue;
+      }
+      total++;
+      accumulator += this.percentAlike[i] / 65535;
+    }
+
+    return accumulator / total;
+  }
+
+  /**
+   * Get the percentage of unhappy cells
+   */
+  getPercentUnhappy() {
+    var unhappy = 0;
+    var n = 0;
+    for (var i = 0; i < this.matrixLen; i++) {
+      if (this.cellStatus[i] !== 0) {
+        n++;
+        if (this.cellStatus[i] === 2) {
+          unhappy++;
+        }
+      }
+    }
+    return unhappy / n;
+  }
+}
