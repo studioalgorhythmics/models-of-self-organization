@@ -83,6 +83,10 @@ export default class SegregationModel extends rx.Subject {
   }
 
   /**
+   * Iterates the model and sends an event to any/all subscribers.
+   *
+   * If the model is complete then the subscriber's onComplete handler is called.
+   *
    * @returns {boolean} - is everybody happy ?
    */
   next() {
@@ -105,32 +109,48 @@ export default class SegregationModel extends rx.Subject {
     // vacate the original
     this.matrix[orig] = 0;
 
-    // update cache
     var neighbors = this.getNeighbors(orig).concat(this.getNeighbors(dest));
     neighbors.push(orig);
     neighbors.push(dest);
 
-    var cells = [];
-    // 18 ?  TODO(crucialfelix): check original paper
-    for (var i = 0; i < 18; i++) {
-      var cell = neighbors[i];
-      // changed ones are here
-      var newStatus = this.getCellStatus(cell);
-      var changed = this.cellStatus[cell] !== newStatus;
+    var changedCells = new Set();
+    neighbors.forEach((cell) => {
+      let newStatus = this.getCellStatus(cell);
+      let changed = this.cellStatus[cell] !== newStatus;
       this.cellStatus[cell] = newStatus;
-      var percentAlike = Math.round(this.getCellAlike(cell) * 65535);
+      let percentAlike = Math.round(this.getCellAlike(cell) * 65535);
       this.percentAlike[cell] = percentAlike;
 
       if (changed) {
-        cells.push({
-          cell: cell,
-          status: newStatus,
-          percentAlike: percentAlike
-        });
+        changedCells.add(cell);
       }
+    });
+
+    // send one event with all of them
+    const groups = {
+      '0': 'vacant',
+      '1': 'group1',
+      '2': 'group2'
+    };
+    const happy = {
+      '1': 'unhappy',
+      '2': 'happy'
+    };
+    var allCells = [];
+    for (let ii = 0; ii < this.matrixLen; ii++) {
+      allCells.push({
+        coords: this.getCoordinatesForCell(ii),
+        group: groups[String(this.matrix[ii])] || 'vacant',
+        happy: happy[String(this.cellStatus[ii])],
+        pctAlike: this.percentAlike[ii],
+        changed: changedCells.has(ii)
+      });
     }
+
     this.onNext({
-      changed: cells
+      cells: allCells,
+      meanPercentAlike: this.getMeanPercentAlike() * 100,
+      percentUnhappy: this.getPercentUnhappy() * 100
     });
     return true;
   }
