@@ -8,11 +8,20 @@ var rx = require('rx');
 
 export default class SegregationModel extends rx.Subject {
 
+  /**
+   * @param {int} size - total number of cells
+   * @param {float} tolerance - 0..1
+   * @param {int} n1 - group1 population size
+   * @param {int} n2 - group2 population size
+   */
   constructor(size, tolerance, n1, n2) {
     super();
     this.init(size, tolerance, n1, n2);
   }
 
+  /**
+   * Initialize the model and internal variables
+   */
   init(size, tolerance, n1, n2) {
     this.size = Number(size);
     this.tolerance = Number(tolerance);
@@ -23,8 +32,7 @@ export default class SegregationModel extends rx.Subject {
 
     // >= because there must always be one empty cell for an unhappy cell to move to
     if (n1 + n2 >= Math.pow(this.size, 2)) {
-      // send stream error
-      console.log('Number of agents must be smaller than number of cells!');
+      this.onError('Number of agents must be smaller than number of cells!');
       return false;
     }
 
@@ -32,7 +40,7 @@ export default class SegregationModel extends rx.Subject {
     this.matrixLen = Math.pow(size, 2);
     this.matrix = new Int8Array(this.matrixLen);
     // initialize to zero
-    for (var i = 0; i < this.matrixLen; i++) {
+    for (let i = 0; i < this.matrixLen; i++) {
       this.matrix[i] = 0;
     }
 
@@ -40,7 +48,7 @@ export default class SegregationModel extends rx.Subject {
     var balance = n1 / (n1 + n2);
     var c1 = 0;
     var c2 = 0;
-    for (var ii = 0; ii < n1 + n2; ii++) {
+    for (let ii = 0; ii < n1 + n2; ii++) {
       var cell  = this.getVacantCell();
 
       if (c1 < n1 && c2 < n2) {
@@ -58,15 +66,13 @@ export default class SegregationModel extends rx.Subject {
         this.matrix[cell] = 2;
         c2++;
       } else {
-        console.log('Distribution error: counts equal to n' +
+        throw new Error('Distribution error: counts equal to n' +
           'but loop still running');
-        return false;
       }
     }
 
     if (c1 !== n1 || c2 !== n2) {
-      console.log('Distribution error: distribution does not match specified');
-      return false;
+      throw new Error('Distribution error: distribution does not match specified');
     }
 
     // populate cell caches
@@ -76,7 +82,7 @@ export default class SegregationModel extends rx.Subject {
     // stored as 16-bit ints, with 0 being 0% alike and 65535 being 100% alike.
     this.percentAlike = new Uint16Array(this.matrixLen);
 
-    for (var iii = 0; iii < this.matrixLen; iii++) {
+    for (let iii = 0; iii < this.matrixLen; iii++) {
       this.cellStatus[iii] = this.getCellStatus(iii);
       this.percentAlike[iii] = Math.round(this.getCellAlike(iii) * 65535);
     }
@@ -155,10 +161,20 @@ export default class SegregationModel extends rx.Subject {
     return true;
   }
 
+  /**
+   * Randomly choose one item from an array.
+   *
+   * @param {Array} arr
+   */
   randomDraw(arr) {
     return arr[Math.floor(Math.random() * (arr.length))];
   }
 
+  /**
+   * Randomly choose a vacant cell
+   *
+   * @returns {number} - cell index
+   */
   getVacantCell() {
     var vacantCells = [];
 
@@ -171,6 +187,11 @@ export default class SegregationModel extends rx.Subject {
     return this.randomDraw(vacantCells);
   }
 
+  /**
+   * Randomly choose one unhappy cell
+   *
+   * @returns {number} - cell index
+   */
   getUnhappyCell() {
     var unhappyCells = [];
     for (var i = 0; i < this.matrixLen; i++) {
@@ -206,8 +227,8 @@ export default class SegregationModel extends rx.Subject {
 
     var ret = [];
 
-    for (var i = 0; i < 8; i++) {
-      var nb = neighbors[i];
+    for (let i = 0; i < 8; i++) {
+      let nb = neighbors[i];
       // correct edge effects
       nb = [this.torus(nb[0]), this.torus(nb[1])];
       ret.push(this.getCellForCoordinates(nb[0], nb[1]));
@@ -217,7 +238,7 @@ export default class SegregationModel extends rx.Subject {
   }
 
   /**
-   * Index to coordinates
+   * Cell index to coordinates
    *
    * @param {int} i - The cell
    * @returns {Object} - {row: <int>, col: <int>}
@@ -229,7 +250,7 @@ export default class SegregationModel extends rx.Subject {
   }
 
   /**
-   * Coordinates to index
+   * Coordinates to cell index
    */
   getCellForCoordinates(row, col) {
     return row * this.size + col;
