@@ -6,28 +6,49 @@
 */
 var d3 = require('d3');
 
+/**
+ * d3 view for a SegregationModel
+ *
+ * The model is hot-swappable. The view subscribes to the model
+ * and displays the agents, cells and the game board.
+ * Also maintains a statistics sidebar that graphs the progress of
+ * the simulation.
+ */
 export default class SegregationView {
 
-  constructor(boardEl, controlsEl, statisticsEl, model, pxSize) {
+  /**
+   *
+   * @param {String} boardEl - eg. '#board svg'
+   * @param {String} statisticsEl - eg. '#statistics'
+   * @param {SegregationModel} model - optional, this can be set later
+   * @param {number} pxSize - size in pixels of the sides of the board.
+   *      This should be the same as the css specifies.
+   */
+  constructor(boardEl, statisticsEl, model, pxSize) {
 
     if (model) {
       this.setModel(model);
     }
 
+    this.pxSize = Number(pxSize);
     this.element = d3.select(boardEl)
-                      .attr('width', this.pxSize)
-                      .attr('height', this.pxSize);
+                      .attr('width', String(this.pxSize) + 'px')
+                      .attr('height', String(this.pxSize) + 'px');
 
     this.meanPercentAlike = [];
     this.percentUnhappy = [];
 
-    this.makeControls(controlsEl, statisticsEl);
-    this.pxSize = Number(pxSize);
+    this.makeStatistics(statisticsEl);
 
     // build the display board
     this.board = this.element.append('g');
   }
 
+  /**
+   * Set a new model and subscribe to it, unsubscribing from any previously running model.
+   *
+   * @param {SegregationModel} model
+   */
   setModel(model) {
     if (this.subscription) {
       this.subscription.dispose();
@@ -53,9 +74,18 @@ export default class SegregationView {
     });
   }
 
-  makeControls(el, statisticsEl) {
-    this.controls = d3.select(el);
-    var statistics = d3.select(statisticsEl);
+  /**
+   * Initialize the statistics sidebar.
+   *
+   * d3 seems to require the SVG element to exist in the markup
+   * when its inside of Electron. Usually you can append svg elements
+   * programmatically.
+   *
+   * @param {String} el - an element or id eg. '#statistics'
+   *        of an existing html dom element on the document.
+   */
+  makeStatistics(el) {
+    var statistics = d3.select(el);
 
     this.percentUnhappyReadout = statistics.select('#percentUnhappyReadout');
     this.percentAlikeReadout = statistics.select('#percentAlikeReadout');
@@ -147,11 +177,12 @@ export default class SegregationView {
         .attr('class', 'scale');
   }
 
+  /**
+   * Called when model pushes a new event
+   *
+   * @param {Object} event
+   */
   update(event) {
-    // update on stream
-    // matrix is an array of 0/1/2
-    // cell status: 2
-
     // determine appropriate radius, leaving some padding
     var cellWidth = this.pxSize / this.model.size;
     var radius = cellWidth * 0.45;
@@ -184,6 +215,9 @@ export default class SegregationView {
 
   /**
     * Get an SVG transform attribute for the center of cell i
+    *
+    * @param {int} cell - cell index
+    * @param {number} cellWidth - cell width in pixels
     */
   getTransformForCell(cell, cellWidth) {
     const x = cell.coords.col * cellWidth + cellWidth / 2;
