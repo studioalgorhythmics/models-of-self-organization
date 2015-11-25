@@ -6,6 +6,12 @@
 */
 var rx = require('rx');
 
+/**
+ * Schelling's spatial segregation model
+ *
+ * This is a subclass of https://github.com/Reactive-Extensions/RxJS/blob/master/doc/api/subjects/subject.md
+ * and thus is an observeable stream that can be subscribed to.
+ */
 export default class SegregationModel extends rx.Subject {
 
   /**
@@ -337,5 +343,14 @@ export default class SegregationModel extends rx.Subject {
       }
     }
     return unhappy / n;
+  }
+
+  params() {
+    return {
+      size: this.size,
+      tolerance: this.tolerance,
+      n1: this.n1,
+      n2: this.n2
+    };
   }
 }

@@ -10,8 +10,9 @@
     "target": "development"
   },
   "dependencies": {
-    "d3": "latest",
+    "d3": "^3.5.9",
     "fs-jetpack": "^0.7.0",
-    "rx": "^4.0.7"
+    "rx": "^4.0.7",
+    "supercolliderjs": "^0.9.0"
   }
 }

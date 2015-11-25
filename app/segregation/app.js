@@ -1,16 +1,23 @@
 
+// local ES6 classes use import
 import SegregationModel from  './model';
 import SegregationView from  './view';
+import BlipBlop from './blip-blop';
 
+// external npm packages use require
 var d3 = require('d3');
 var rx = require('rx');
+
+const boardSize = 300;
+const speed = 300;
 
 export default function run() {
 
   var model;
   var stepper;
-  const view = new SegregationView('#board svg', '#statistics',
-    model, 300);
+  var multicast;
+  const view = new SegregationView('#board svg', '#statistics', boardSize);
+  const sound = new BlipBlop();
 
   function start() {
     // initial
@@ -18,7 +25,7 @@ export default function run() {
 
     stepper = setInterval(() => {
       model.next();
-    }, 300);
+    }, speed);
 
     model.doOnCompleted(stop);
   }
@@ -77,9 +84,13 @@ export default function run() {
       var n1 = totalAgents - n2;
 
       model = new SegregationModel(values.size, values.tolerance, n1, n2);
-      view.setModel(model);
+      multicast = model.publish();
+      view.setSubject(multicast, model.params());
+      sound.setSubject(multicast, model.params());
+      multicast.connect();
+
       // or call it once for init
-      // and wait for start button
+      // and then wait for start button
       start();
     });
 
