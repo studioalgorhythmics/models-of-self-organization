@@ -2,7 +2,7 @@
 // local ES6 classes use import
 import SegregationModel from  './model';
 import SegregationView from  './view';
-import BlipBlop from './blip-blop';
+import BlipBlop from './BlipBlop';
 
 // external npm packages use require
 var d3 = require('d3');

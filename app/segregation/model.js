@@ -161,6 +161,7 @@ export default class SegregationModel extends rx.Subject {
 
     this.onNext({
       cells: allCells,
+      changedCells: Array.from(changedCells),
       meanPercentAlike: this.getMeanPercentAlike() * 100,
       percentUnhappy: this.getPercentUnhappy() * 100
     });
