@@ -144,16 +144,12 @@ export default class SegregationModel extends rx.Subject {
       '1': 'group1',
       '2': 'group2'
     };
-    const happy = {
-      '1': 'unhappy',
-      '2': 'happy'
-    };
     var allCells = [];
     for (let ii = 0; ii < this.matrixLen; ii++) {
       allCells.push({
         coords: this.getCoordinatesForCell(ii),
         group: groups[String(this.matrix[ii])] || 'vacant',
-        happy: happy[String(this.cellStatus[ii])],
+        unhappy: this.cellStatus[ii] === 2,
         pctAlike: this.percentAlike[ii],
         changed: changedCells.has(ii)
       });

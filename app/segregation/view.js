@@ -191,7 +191,9 @@ export default class SegregationView {
 
     circles
       .attr('r', radius)
-      .attr('class', (d) => (d.group || 'vacant') + ' ' + (d.happy || ''))
+      .attr('class', (d) => {
+        return (d.group || 'vacant') + ' ' + (d.unhappy  ? 'unhappy' : '');
+      })
       .attr('transform', (d) => this.getTransformForCell(d, cellWidth));
 
     // push to history stack
