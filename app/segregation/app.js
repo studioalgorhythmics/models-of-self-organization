@@ -19,10 +19,13 @@ export default function run() {
   const view = new SegregationView('#board svg', '#statistics', boardSize);
   const sound = new BlipBlop();
 
-  function start() {
-    // initial
-    model.next();
+  // always playing, ready for events
+  sound.play();
 
+  function start() {
+    if (stepper) {
+      stop();
+    }
     stepper = setInterval(() => {
       model.next();
     }, speed);

@@ -81,9 +81,12 @@ export default class BlipBlop {
       }
     });
     if (synths.length) {
-      // push a group into the synthStream
-      // to be spawned
-      this.soundStream.onNext(group(synths));
+      // push a group into the synthStream to be spawned
+      // the group is never freeing
+      // this.soundStream.onNext(group(synths));
+      synths.forEach((synth) => {
+        this.soundStream.onNext(synth);
+      });
     }
   }
 
