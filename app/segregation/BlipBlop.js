@@ -6,17 +6,26 @@ const group = sc.dryads.group;
 const compileSynthDef = sc.dryads.compileSynthDef;
 
 const blip = compileSynthDef('blip', `
-  { arg out=0, freq=440, numharm=200, amp=1.0;
+  { arg out=0, freq=440, numharm=200, pan=0, amp=1.0;
     Out.ar(out,
-      Blip.ar(freq, amp) * EnvGen.kr(Env.perc(0.1, 0.3))
+      Pan2.ar(
+        Blip.ar(freq, numharm, amp) *
+          EnvGen.kr(Env.linen(0.01, 0.2, 0.01), doneAction: 2),
+        pan
+      )
     );
   }
 `);
 
 const blop = compileSynthDef('blop', `
-  { arg out=0, freq=440, width=0.5, amp=1.0;
+  { arg out=0, freq=440, ffreq=800, rq=0.3, pan=0, amp=1.0;
+    var fenv = EnvGen.kr(Env.linen(0.05, 0.05, 0.1));
     Out.ar(out,
-      Pulse.ar(freq, width, amp) * EnvGen.kr(Env.perc(0.1, 0.3))
+      Pan2.ar(
+        RLPF.ar(Saw.ar(freq, amp), ffreq * fenv, rq * fenv + 0.1) *
+          EnvGen.kr(Env.linen(0.01, 0.1, 0.01), doneAction: 2),
+        pan
+      )
     );
   }
 `);
@@ -77,16 +86,19 @@ export default class BlipBlop {
   blip(cell) {
     return synth('blip', {
       freq: sc.map.midiToFreq(cell.coords.col * 2 + 30),
-      numharm: sc.map.linToLin(0, this.sideLength, 0, 20, cell.coords.row),
-      amp: sc.map.dbToAmp(-10)
+      numharm: sc.map.linToLin(0, this.sideLength, 0, 50, cell.coords.row),
+      pan: sc.map.linToLin(0, this.sideLength, -1, 1, cell.coords.col),
+      amp: sc.map.dbToAmp(-25)
     });
   }
 
   blop(cell) {
     return synth('blop', {
       freq: sc.map.midiToFreq(cell.coords.col * 2 + 30),
-      width: cell.coords.row / this.sideLength,
-      amp: sc.map.dbToAmp(-10)
+      ffreq: sc.map.midiToFreq(cell.coords.row * 3 + 30),
+      rq: sc.map.linToLin(0, this.sideLength, 0.05, 1.0, cell.coords.row),
+      pan: sc.map.linToLin(0, this.sideLength, -1, 1, cell.coords.col),
+      amp: sc.map.dbToAmp(-25)
     });
   }
 }
