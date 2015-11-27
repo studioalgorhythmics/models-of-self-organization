@@ -60,14 +60,17 @@ export default class SegregationView {
       .attr('y1', this.vscale(params.tolerance * 100))
       .attr('y2', this.vscale(params.tolerance * 100));
 
-    this.subscription = stream.subscribe((event) => {
-      // console.log(event);
-      this.update(event);
-    }, (error) => {
-      console.error('Error in model stream:', error);
-    }, () => {
-      console.log('Game over');
-    });
+    if (stream) {
+      // if I inherit from Observer then can subscribe myself
+      this.subscription = stream.subscribe((event) => {
+        // console.log(event);
+        this.update(event);
+      }, (error) => {
+        console.error('Error in model stream:', error);
+      }, () => {
+        console.log('Game over');
+      });
+    }
   }
 
   /**

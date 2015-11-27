@@ -60,9 +60,13 @@ export default class BlipBlop {
     if (this.subscription) {
       this.subscription.dispose();
     }
-    this.subscription = stream.subscribe((next) => this.update(next));
-    this.modelParams = params;
-    this.sideLength = Math.sqrt(params.size);
+    if (stream) {
+      this.subscription = stream.subscribe((next) => this.update(next));
+    }
+    if (params) {
+      this.modelParams = params;
+      this.sideLength = params.size;
+    }
   }
 
   update(event) {
