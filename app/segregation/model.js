@@ -6,6 +6,12 @@
 */
 var rx = require('rx');
 
+/**
+ * Schelling's spatial segregation model
+ *
+ * This is a subclass of https://github.com/Reactive-Extensions/RxJS/blob/master/doc/api/subjects/subject.md
+ * and thus is an observeable stream that can be subscribed to.
+ */
 export default class SegregationModel extends rx.Subject {
 
   /**
@@ -138,16 +144,12 @@ export default class SegregationModel extends rx.Subject {
       '1': 'group1',
       '2': 'group2'
     };
-    const happy = {
-      '1': 'unhappy',
-      '2': 'happy'
-    };
     var allCells = [];
     for (let ii = 0; ii < this.matrixLen; ii++) {
       allCells.push({
         coords: this.getCoordinatesForCell(ii),
         group: groups[String(this.matrix[ii])] || 'vacant',
-        happy: happy[String(this.cellStatus[ii])],
+        unhappy: this.cellStatus[ii] === 2,
         pctAlike: this.percentAlike[ii],
         changed: changedCells.has(ii)
       });
@@ -155,6 +157,7 @@ export default class SegregationModel extends rx.Subject {
 
     this.onNext({
       cells: allCells,
+      changedCells: Array.from(changedCells),
       meanPercentAlike: this.getMeanPercentAlike() * 100,
       percentUnhappy: this.getPercentUnhappy() * 100
     });
@@ -337,5 +340,14 @@ export default class SegregationModel extends rx.Subject {
       }
     }
     return unhappy / n;
+  }
+
+  params() {
+    return {
+      size: this.size,
+      tolerance: this.tolerance,
+      n1: this.n1,
+      n2: this.n2
+    };
   }
 }

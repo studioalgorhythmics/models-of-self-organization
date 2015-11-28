@@ -20,15 +20,10 @@ export default class SegregationView {
    *
    * @param {String} boardEl - eg. '#board svg'
    * @param {String} statisticsEl - eg. '#statistics'
-   * @param {SegregationModel} model - optional, this can be set later
    * @param {number} pxSize - size in pixels of the sides of the board.
    *      This should be the same as the css specifies.
    */
-  constructor(boardEl, statisticsEl, model, pxSize) {
-
-    if (model) {
-      this.setModel(model);
-    }
+  constructor(boardEl, statisticsEl, pxSize) {
 
     this.pxSize = Number(pxSize);
     this.element = d3.select(boardEl)
@@ -47,31 +42,35 @@ export default class SegregationView {
   /**
    * Set a new model and subscribe to it, unsubscribing from any previously running model.
    *
-   * @param {SegregationModel} model
+   * @param {SegregationModel} stream - an Observerable. Could be a SegregationModel or if that is published then it produces an ObservereableSequence for multi-cast to many observers.
+   * @param {Object} params - the model's settings like tolerance, size, n1, n2
    */
-  setModel(model) {
+  setSubject(stream, params) {
     if (this.subscription) {
       this.subscription.dispose();
     }
 
-    this.model = model;
+    this.modelParams = params;
 
     // history of steps
     this.meanPercentAlike = [];
     this.percentUnhappy = [];
 
     this.percentAlikeChart.select('line')
-      .attr('y1', this.vscale(this.model.tolerance * 100))
-      .attr('y2', this.vscale(this.model.tolerance * 100));
+      .attr('y1', this.vscale(params.tolerance * 100))
+      .attr('y2', this.vscale(params.tolerance * 100));
 
-    this.subscription = this.model.subscribe((event) => {
-      // console.log(event);
-      this.update(event);
-    }, (error) => {
-      console.error('Error in model stream:', error);
-    }, () => {
-      console.log('Game over');
-    });
+    if (stream) {
+      // if I inherit from Observer then can subscribe myself
+      this.subscription = stream.subscribe((event) => {
+        // console.log(event);
+        this.update(event);
+      }, (error) => {
+        console.error('Error in model stream:', error);
+      }, () => {
+        console.log('Game over');
+      });
+    }
   }
 
   /**
@@ -184,7 +183,7 @@ export default class SegregationView {
    */
   update(event) {
     // determine appropriate radius, leaving some padding
-    var cellWidth = this.pxSize / this.model.size;
+    var cellWidth = this.pxSize / this.modelParams.size;
     var radius = cellWidth * 0.45;
 
     var circles = this.board.selectAll('circle').data(event.cells);
@@ -195,7 +194,9 @@ export default class SegregationView {
 
     circles
       .attr('r', radius)
-      .attr('class', (d) => (d.group || 'vacant') + ' ' + (d.happy || ''))
+      .attr('class', (d) => {
+        return (d.group || 'vacant') + ' ' + (d.unhappy  ? 'unhappy' : '');
+      })
       .attr('transform', (d) => this.getTransformForCell(d, cellWidth));
 
     // push to history stack
