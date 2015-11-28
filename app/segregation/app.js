@@ -8,8 +8,8 @@ import BlipBlop from './BlipBlop';
 var d3 = require('d3');
 var rx = require('rx');
 
-const boardSize = 300;
-const speed = 300;
+const boardSize = 500;
+const speed = 200;
 
 export default function run() {
 
