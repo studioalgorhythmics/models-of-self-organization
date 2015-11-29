@@ -79,9 +79,19 @@ class SegregationApp {
     this.gui.add(this, 'stop');
     this.gui.add(this, 'restart');
 
+    this.addSoundSelector();
+
     document.getElementById('controls').appendChild(this.gui.domElement);
   }
 
+  addSoundSelector() {
+    if (this.soundSelector) {
+      this.gui.remove(this.soundSelector);
+    }
+    this.soundSelector = this.gui.add(this.sound,
+      'soundSet',
+      this.sound.soundSets());
+  }
   buildModel() {
     var totalAgents = this.fill * (Math.pow(this.gridSize, 2) - 1);
     var n2 = (this.balance / 100.0) * totalAgents;
