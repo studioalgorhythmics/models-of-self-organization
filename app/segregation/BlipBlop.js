@@ -41,6 +41,7 @@ export default class BlipBlop {
     if (stream) {
       this.setSubject(stream, params);
     }
+    this.dB = -25;
   }
 
   play() {
@@ -95,7 +96,7 @@ export default class BlipBlop {
       freq: sc.map.midiToFreq(cell.coords.col * 2 + 30),
       numharm: sc.map.linToLin(0, this.sideLength, 0, 50, cell.coords.row),
       pan: sc.map.linToLin(0, this.sideLength, -1, 1, cell.coords.col),
-      amp: sc.map.dbToAmp(-25)
+      amp: sc.map.dbToAmp(this.dB)
     });
   }
 
@@ -105,7 +106,7 @@ export default class BlipBlop {
       ffreq: sc.map.midiToFreq(cell.coords.row * 3 + 30),
       rq: sc.map.linToLin(0, this.sideLength, 0.05, 1.0, cell.coords.row),
       pan: sc.map.linToLin(0, this.sideLength, -1, 1, cell.coords.col),
-      amp: sc.map.dbToAmp(-25)
+      amp: sc.map.dbToAmp(this.dB)
     });
   }
 }

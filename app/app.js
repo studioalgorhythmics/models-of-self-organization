@@ -3,7 +3,7 @@
 
 // Modules which you authored in this project are intended to be
 // imported through new ES6 syntax.
-import run from './segregation/app';
+import main from './segregation/app';
 
 // Node.js modules and those from npm
 // are required the same way as always.
@@ -19,6 +19,6 @@ import run from './segregation/app';
 
 document.addEventListener('DOMContentLoaded', function() {
 
-  run();
+  main();
 
 });
