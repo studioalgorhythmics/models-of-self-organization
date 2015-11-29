@@ -22,7 +22,7 @@ class SegregationApp {
     this.balance = 50.0;
 
     this.speed = 250;
-    this.volume = -10;
+    this.dB = -10;
 
     this.view = new SegregationView('#board svg', '#statistics', boardSize);
     this.sound = new BlipBlop();
@@ -70,9 +70,8 @@ class SegregationApp {
       });
 
     this.gui.add(this, 'speed', 10, 500);
-    this.gui.add(this, 'volume', -130.0, 0.0).onChange((value) => {
-      console.log('db', this.volume);
-      // set sound volume
+    this.gui.add(this, 'dB', -130.0, 0.0).onChange((value) => {
+      this.sound.dB = value;
     });
     // select sonifier
 
