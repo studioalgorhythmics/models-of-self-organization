@@ -1,4 +1,6 @@
 
+import sounds from './sounds';
+
 var sc = require('supercolliderjs');
 var rx = require('rx');
 var _ = require('lodash');
@@ -19,16 +21,16 @@ export default class BlipBlop {
       this.setSubject(stream, params);
     }
     this.dB = -25;
-    this.initSounds();
     this.soundSet = 'synth';
+    this.initializeParams();
   }
 
   play() {
     this.soundStream = new rx.Subject();
 
     var synthDefs = [];
-    for (let name in this.sounds) {
-      this.sounds[name].forEach((ss) => {
+    for (let name in sounds) {
+      sounds[name].forEach((ss) => {
         synthDefs.push(compileSynthDef(ss.defName, ss.source));
       });
     }
@@ -58,68 +60,34 @@ export default class BlipBlop {
     var synths = [];
     event.changedCells.forEach((i) => {
       var cell = event.cells[i];
-      var ss = this.sounds[this.soundSet][cell.group === 'group1' ? 0 : 1];
-      var sy = synth(ss.defName, ss.args(cell));
+      var ss = sounds[this.soundSet][cell.group === 'group1' ? 0 : 1];
+      var x = sc.map.linToLin(0, this.sideLength, 0.0, 1.0, cell.coords.col);
+      var y = sc.map.linToLin(0, this.sideLength, 0.0, 1.0, cell.coords.row);
+      var args = ss.args(cell, x, y);
+      // params are set by dat.gui
+      args = _.assign(args, this.params, {amp: sc.map.dbToAmp(this.dB)});
+      var sy = synth(ss.defName, args);
       this.soundStream.onNext(sy);
     });
   }
 
-  initSounds() {
-    this.sounds = {};
-
-    this.sounds.synths = [
-      {
-        defName: 'blip',
-        source:
-          `{ arg out=0, freq=440, numharm=200, pan=0, amp=1.0;
-              Out.ar(out,
-                Pan2.ar(
-                  Blip.ar(freq, numharm, amp) *
-                    EnvGen.kr(Env.linen(0.01, 0.2, 0.01), doneAction: 2),
-                  pan
-                )
-              );
-            }
-          `,
-        args: (cell) => {
-          return {
-            freq: sc.map.midiToFreq(cell.coords.col * 2 + 30),
-            numharm: sc.map.linToLin(
-              0, this.sideLength,
-              0, 50,
-              cell.coords.row),
-            pan: sc.map.linToLin(0, this.sideLength, -1, 1, cell.coords.col),
-            amp: sc.map.dbToAmp(this.dB)
-          };
-        }
-      },
-      {
-        defName: 'blop',
-        source:
-          `{ arg out=0, freq=440, ffreq=800, rq=0.3, pan=0, amp=1.0;
-            var fenv = EnvGen.kr(Env.linen(0.05, 0.05, 0.1));
-            Out.ar(out,
-              Pan2.ar(
-                RLPF.ar(Saw.ar(freq, amp), ffreq * fenv, rq * fenv + 0.1) *
-                  EnvGen.kr(Env.linen(0.01, 0.1, 0.01), doneAction: 2),
-                pan
-              )
-            );
-          }`,
-        args: (cell) => {
-          return {
-            freq: sc.map.midiToFreq(cell.coords.col * 2 + 30),
-            ffreq: sc.map.midiToFreq(cell.coords.row * 3 + 30),
-            rq: sc.map.linToLin(0, this.sideLength, 0.05, 1.0, cell.coords.row),
-            pan: sc.map.linToLin(0, this.sideLength, -1, 1, cell.coords.col),
-            amp: sc.map.dbToAmp(this.dB)
-          };
-        }
-      }
-    ];
+  initializeParams() {
+    this.params = _.mapValues(
+      this.paramSpecs(),
+      (spec, name) => spec.default);
   }
 
   soundSets() {
-    return _.keys(this.sounds);
+    return _.keys(sounds);
+  }
+
+  paramSpecs() {
+    var specs = {};
+    _.each(sounds[this.soundSet], (sound) => {
+      _.each(sound.params || {}, (spec, name) => {
+        specs[name] = spec;
+      });
+    });
+    return specs;
   }
 }
