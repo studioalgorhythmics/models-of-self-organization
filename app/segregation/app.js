@@ -7,6 +7,7 @@ import BlipBlop from './BlipBlop';
 // external npm packages use require
 var d3 = require('d3');
 var rx = require('rx');
+var _ = require('lodash');
 
 const boardSize = 500;
 
@@ -79,7 +80,34 @@ class SegregationApp {
     this.gui.add(this, 'stop');
     this.gui.add(this, 'restart');
 
+    this.addSoundSelector();
+    this.addSoundParamControls();
+
     document.getElementById('controls').appendChild(this.gui.domElement);
+  }
+
+  addSoundSelector() {
+    if (this.soundSelector) {
+      this.gui.remove(this.soundSelector);
+    }
+    this.soundSelector = this.gui.add(this.sound,
+      'soundSet',
+      this.sound.soundSets());
+    this.soundSelector.onChange(() => {
+      this.sound.initializeParams();
+      this.addSoundParamControls();
+    });
+  }
+
+  addSoundParamControls() {
+    if (this.soundParams) {
+      this.soundParams.forEach((p) => this.gui.remove(p));
+    }
+    this.soundParams = [];
+    _.each(this.sound.paramSpecs(), (spec, name) => {
+      var c = this.gui.add(this.sound.params, name, spec.minval, spec.maxval);
+      this.soundParams.push(c);
+    });
   }
 
   buildModel() {
