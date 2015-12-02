@@ -1,103 +1,175 @@
 
+// local ES6 classes use import
 import SegregationModel from  './model';
 import SegregationView from  './view';
+import BlipBlop from './BlipBlop';
 
+// external npm packages use require
 var d3 = require('d3');
 var rx = require('rx');
+var _ = require('lodash');
 
-export default function run() {
+const boardSize = 500;
 
-  var model;
-  var stepper;
-  const view = new SegregationView('#board svg', '#statistics',
-    model, 300);
+/**
+ * Application class that connects the model, view, sound and controls together.
+ */
+class SegregationApp {
 
-  function start() {
-    // initial
-    model.next();
+  constructor() {
+    this.tolerance = 0.3;
+    this.fill = 0.95;
+    this.gridSize = 30;
+    this.balance = 50.0;
 
-    stepper = setInterval(() => {
-      model.next();
-    }, 300);
+    this.speed = 250;
+    this.dB = -10;
 
-    model.doOnCompleted(stop);
+    this.view = new SegregationView('#board svg', '#statistics', boardSize);
+    this.sound = new BlipBlop();
+    this.buildModel();
+
+    this.isPlaying = false;
+
+    this.stepperFn = () => {
+      this.isPlaying = true;
+      this.model.next();
+      this.stepper = setTimeout(this.stepperFn, this.ms());
+    };
   }
 
-  function stop() {
-    clearTimeout(stepper);
-    stepper = null;
+  controlsGui() {
+    this.gui = new window.dat.GUI({autoPlace: false});
+    // #controls
+    this.gui.add(this, 'tolerance', 0.0, 1.0, 0.01).name('Intolerance')
+      .onChange((value) => {
+        this.buildModel();
+        if (this.isPlaying) {
+          this.start();
+        }
+      });
+    this.gui.add(this, 'fill', 0.0, 1.0, 0.01)
+      .onChange((value) => {
+        this.buildModel();
+        if (this.isPlaying) {
+          this.start();
+        }
+      });
+    this.gui.add(this, 'gridSize', 2.0, 40.0, 1)
+      .onChange((value) => {
+        this.buildModel();
+        if (this.isPlaying) {
+          this.start();
+        }
+      });
+    this.gui.add(this, 'balance', 0.0, 100.0, 1)
+      .onChange((value) => {
+        this.buildModel();
+        if (this.isPlaying) {
+          this.start();
+        }
+      });
+
+    this.gui.add(this, 'speed', 10, 500);
+    this.gui.add(this, 'dB', -130.0, 0.0).onChange((value) => {
+      this.sound.dB = value;
+    });
+    // select sonifier
+
+    this.gui.add(this, 'start');
+    this.gui.add(this, 'stop');
+    this.gui.add(this, 'restart');
+
+    this.addSoundSelector();
+    this.addSoundParamControls();
+
+    document.getElementById('controls').appendChild(this.gui.domElement);
+  }
+
+  addSoundSelector() {
+    if (this.soundSelector) {
+      this.gui.remove(this.soundSelector);
+    }
+    this.soundSelector = this.gui.add(this.sound,
+      'soundSet',
+      this.sound.soundSets());
+    this.soundSelector.onChange(() => {
+      this.sound.initializeParams();
+      this.addSoundParamControls();
+    });
+  }
+
+  addSoundParamControls() {
+    if (this.soundParams) {
+      this.soundParams.forEach((p) => this.gui.remove(p));
+    }
+    this.soundParams = [];
+    _.each(this.sound.paramSpecs(), (spec, name) => {
+      var c = this.gui.add(this.sound.params, name, spec.minval, spec.maxval);
+      this.soundParams.push(c);
+    });
+  }
+
+  buildModel() {
+    var totalAgents = this.fill * (Math.pow(this.gridSize, 2) - 1);
+    var n2 = (this.balance / 100.0) * totalAgents;
+    var n1 = totalAgents - n2;
+
+    this.model = new SegregationModel(this.gridSize, this.tolerance, n1, n2);
+    this.model.doOnCompleted(() => this.stop());
+
+    var multicast = this.model.publish();
+    this.view.setSubject(multicast, this.model.params());
+    multicast.connect();
+    this.model.next();
+    this.sound.setSubject(multicast, this.model.params());
   }
 
   /**
-   * Create a stream of values from an html input
+   * Turn the sound engine on, waiting for events to spawn.
    */
-  function inputStream(id) {
-    let el = document.getElementById(id);
-    return rx.Observable.fromEvent(el, 'input')
-      .map(() => {
-        return parseFloat(el.value);
-      })
-      .startWith(parseFloat(el.value));
+  play() {
+    return this.sound.play();
   }
 
-  function runModel() {
-    if (stepper) {
-      stop();
+  /*
+   * Start stepping through the model
+   */
+  start() {
+    if (this.stepper) {
+      this.stop();
     }
-
-    // controls
-    d3.selectAll('.clearme').html('');
-
-    /**
-     * Combine all the html inputs into a single stream with the latest values
-     */
-    let controls = rx.Observable.combineLatest(
-      inputStream('tolerance'),
-      inputStream('size'),
-      inputStream('fill'),
-      inputStream('balance'),
-      // map values into a dictionary
-      (tolerance, size, fill, balance) => {
-        return {
-          tolerance: tolerance,
-          size: size,
-          fill: fill,
-          balance: balance
-        };
-      }
-    );
-
-    /**
-     * When values change, create a new model and run it.
-     */
-    controls.subscribe((values) => {
-      // there needs always to be a single vacant square
-      var totalAgents = values.fill * (Math.pow(values.size, 2) - 1);
-      var n2 = values.balance * totalAgents;
-      var n1 = totalAgents - n2;
-
-      model = new SegregationModel(values.size, values.tolerance, n1, n2);
-      view.setModel(model);
-      // or call it once for init
-      // and wait for start button
-      start();
-    });
-
-    /**
-     * Update the readouts when values change
-     */
-    controls.subscribe((values) => {
-      for (let key in values) {
-        document.getElementById(key + '-readout').value =
-          (key === 'size') ?
-            values[key] :
-            '' + Math.round(values[key] * 100) + '%';
-      }
-    });
-
+    this.stepper = setTimeout(this.stepperFn, this.ms());
   }
 
-  // bind go button on page to start it again
+  stop() {
+    if (this.stepper) {
+      clearTimeout(this.stepper);
+      this.stepper = null;
+    }
+    this.isPlaying = false;
+  }
 
-  runModel();
+  restart() {
+    this.buildModel();
+    this.start();
+  }
+
+  /**
+   * Speed in milliseconds
+   */
+  ms() {
+    return 60.0 / this.speed * 1000;
+  }
+}
+
+export default function main() {
+
+  const app = new SegregationApp();
+  app.controlsGui();
+
+  app.buildModel();
+  // always playing, ready for events
+  app.play();
+  // app.start();
 }

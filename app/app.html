@@ -10,73 +10,23 @@
   <script src="vendor/electron_boilerplate/context_menu.js"></script>
   <script src="vendor/electron_boilerplate/external_links.js"></script>
 
+  <script src="node_modules/dat.gui/build/dat.gui.min.js"></script>
   <script src="app.js"></script>
 </head>
 <body>
   <div id="content" class="section">
-    <div id="controls">
-      <table>
-        <tr>
-          <td>
-            <label for="tolerance">Threshold</label>
-          </td>
-          <td >
-            <input type="range" id="tolerance" min="0" max="1" step="0.01" value="0.3" />
-          </td>
-          <td>
-            <output for="tolerance" class="inputReadout" id="tolerance-readout" />
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <label for="fill">Fill factor</label>
-          </td>
-          <td >
-            <input type="range" id="fill" min="0" max="1" step="0.01" value="0.95" />
-          </td>
-          <td>
-            <output for="fill" class="inputReadout" id="fill-readout" />
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <label for="size">Grid size</label>
-          </td>
-          <td >
-            <input type="range" id="size" min="2" max="40" step="1" value="30" />
-          </td>
-          <td>
-            <output for="size" class="inputReadout" id="size-readout" />
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <label for="balance">Balance</label>
-          </td>
-          <td>
-            <input type="range" id="balance" min="0" max="1" step="0.01" value="0.5" />
-          </td>
-          <td>
-            <output for="balance" class="inputReadout" id="balance-readout" />
-          </td>
-        </tr>
-        <tr>
-          <td colspan="3">
-            <button id="run-button">Run Model</button>
-          </td>
-        </tr>
-      </table>
-    </div>
+    <h1>Segregation Model</h1>
+
+    <div id="controls"></div>
 
     <div id="board">
-      <!-- board spaces will be populated here -->
       <svg></svg>
     </div>
 
     <div id="statistics">
       <div>
         <span id="percentAlikeChart"><svg></svg></span>
-        <span id="percentAlikeReadout" class="readout clearme"></span>
+        <span id="percentAlikeReadout" class="readout"></span>
       </div>
       <div>
         <span id="percentUnhappyChart"><svg></svg></span>
@@ -90,19 +40,17 @@
      <p>
       This is an implementation
       of <a href="https://class.coursera.org/modelthinking/lecture/16">Schelling's
-      spatial segregation model</a> in JavaScript. Schelling's model is agent-based; the
-      agents (the red and purple dots, in this case) represent two
-      groups choosing residential locations. Each agent decides
+      spatial segregation model</a>. Schelling's model is agent-based; the
+      agents represent two groups choosing residential locations. Each agent decides
       whether it is happy or unhappy in a neighborhood based on
       whether its neighbors are like it or not.</p>
 
       <p>
-      <strong>Threshold</strong> is a percentage of like neighbors required to be happy. For
-      instance, if the threshold is 25% and 2 out of 8 neighbors are
+      <strong>Intolerance</strong> is a percentage of un-like neighbors above which the agent will become unhappy. For
+      instance, if the intolerance is 25% and 2 out of 8 neighbors are
       like the agent, the agent will be happy. However, if the
-      threshold is 35%, the agent will not be happy and will move. The
-      lighter dots represent unhappy agents, while the darker dots
-      represent happy agents.
+      intolerance is 35%, the agent will not be happy and will move.
+      Dots with red borders are unhappy.
      </p>
 
      <p>
@@ -119,7 +67,7 @@
        grid size simply determines how large the simulation grid
        is. The balance slider determines the balance between members
        of one group and members of another; if set to 50% there will
-       be the same number of red and purple agents.
+       be the same number of group1 and group2 agents.
      </p>
 
       <p>
@@ -140,9 +88,7 @@
      <p>
        The model is initialized by placing the cells randomly on the
        board. On each step of the model, a randomly selected unhappy
-       cell is moved to a randomly selected vacant cell; the display
-       updates every 20 steps. Schelling's book <i>Micromotives and
-       Macrobehavior</i> contains a good description of the model's
+       cell is moved to a randomly selected vacant cell. Schelling's book <i>Micromotives and Macrobehavior</i> contains a good description of the model's
        operation in general as well as its behavior under specific
        circumstances, on pages 147&ndash;155 (in the 1978 paperback,
        anyhow). The interface is based on <a href="https://github.com/mattwigway/segregation.js">Matthew Wigginton Conway's Segregation</a>

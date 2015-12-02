@@ -6,6 +6,24 @@
 */
 var rx = require('rx');
 
+const Group = {
+  NONE: 0,
+  ONE: 1,
+  TWO: 2
+};
+
+const Status = {
+  NONE: 0,
+  HAPPY: 1,
+  UNHAPPY: 2
+};
+
+/**
+ * Schelling's spatial segregation model
+ *
+ * This is a subclass of https://github.com/Reactive-Extensions/RxJS/blob/master/doc/api/subjects/subject.md
+ * and thus is an observeable stream that can be subscribed to.
+ */
 export default class SegregationModel extends rx.Subject {
 
   /**
@@ -41,7 +59,7 @@ export default class SegregationModel extends rx.Subject {
     this.matrix = new Int8Array(this.matrixLen);
     // initialize to zero
     for (let i = 0; i < this.matrixLen; i++) {
-      this.matrix[i] = 0;
+      this.matrix[i] = Group.NONE;
     }
 
     // populate matrix
@@ -53,17 +71,17 @@ export default class SegregationModel extends rx.Subject {
 
       if (c1 < n1 && c2 < n2) {
         if (Math.random() < balance) {
-          this.matrix[cell] = 1;
+          this.matrix[cell] = Group.ONE;
           c1++;
         } else {
-          this.matrix[cell] = 2;
+          this.matrix[cell] = Group.TWO;
           c2++;
         }
       } else if (c1 < n1) {
-        this.matrix[cell] = 1;
+        this.matrix[cell] = Group.ONE;
         c1++;
       } else if (c2 < n2) {
-        this.matrix[cell] = 2;
+        this.matrix[cell] = Group.TWO;
         c2++;
       } else {
         throw new Error('Distribution error: counts equal to n' +
@@ -113,7 +131,7 @@ export default class SegregationModel extends rx.Subject {
     // move
     this.matrix[dest] = this.matrix[orig];
     // vacate the original
-    this.matrix[orig] = 0;
+    this.matrix[orig] = Group.NONE;
 
     var neighbors = this.getNeighbors(orig).concat(this.getNeighbors(dest));
     neighbors.push(orig);
@@ -134,20 +152,16 @@ export default class SegregationModel extends rx.Subject {
 
     // send one event with all of them
     const groups = {
-      '0': 'vacant',
-      '1': 'group1',
-      '2': 'group2'
-    };
-    const happy = {
-      '1': 'unhappy',
-      '2': 'happy'
+      [Group.NONE]: 'vacant',
+      [Group.ONE]: 'group1',
+      [Group.TWO]: 'group2'
     };
     var allCells = [];
     for (let ii = 0; ii < this.matrixLen; ii++) {
       allCells.push({
         coords: this.getCoordinatesForCell(ii),
         group: groups[String(this.matrix[ii])] || 'vacant',
-        happy: happy[String(this.cellStatus[ii])],
+        unhappy: this.cellStatus[ii] === Status.UNHAPPY,
         pctAlike: this.percentAlike[ii],
         changed: changedCells.has(ii)
       });
@@ -155,6 +169,7 @@ export default class SegregationModel extends rx.Subject {
 
     this.onNext({
       cells: allCells,
+      changedCells: Array.from(changedCells),
       meanPercentAlike: this.getMeanPercentAlike() * 100,
       percentUnhappy: this.getPercentUnhappy() * 100
     });
@@ -179,7 +194,7 @@ export default class SegregationModel extends rx.Subject {
     var vacantCells = [];
 
     for (var i = 0; i < this.matrixLen; i++) {
-      if (this.matrix[i] === 0) {
+      if (this.matrix[i] === Group.NONE) {
         vacantCells.push(i);
       }
     }
@@ -195,7 +210,7 @@ export default class SegregationModel extends rx.Subject {
   getUnhappyCell() {
     var unhappyCells = [];
     for (var i = 0; i < this.matrixLen; i++) {
-      if (this.cellStatus[i] === 2) {
+      if (this.cellStatus[i] === Status.UNHAPPY) {
         unhappyCells.push(i);
       }
     }
@@ -208,7 +223,9 @@ export default class SegregationModel extends rx.Subject {
   }
 
   /**
-    * Get the cell indices of a cell's neighbors, correcting for edge effects
+    * Get the cell indices of a cell's neighbors.
+    * Cells at board edges are considered to be neighbors
+    * with the opposite edge. ie. Asteroids style wrap around
     */
   getNeighbors(cell) {
     var coords = this.getCoordinatesForCell(cell);
@@ -263,18 +280,18 @@ export default class SegregationModel extends rx.Subject {
    * @returns {number} - 0 if vacant, 1 if happy, 2 if unhappy
    */
   getCellStatus(i) {
-    if (this.matrix[i] === 0) {
-      return 0;
+    if (this.matrix[i] === Group.NONE) {
+      return Status.NONE;
     } else {
-      return this.isCellUnhappy(i) ? 2 : 1;
+      return this.isCellUnhappy(i) ? Status.UNHAPPY : Status.HAPPY;
     }
   }
 
-/**
- * Get the percent-alike of a cell, as a float in [0, 1].
- * @param {int} cell - The cell
- * @returns {int} - amount alike
- */
+  /**
+   * Get the percent-alike of a cell, as a float in [0, 1].
+   * @param {int} cell - The cell
+   * @returns {int} - amount alike
+   */
   getCellAlike(cell) {
     var thisCell = this.matrix[cell];
 
@@ -283,9 +300,9 @@ export default class SegregationModel extends rx.Subject {
 
     var neighbors = this.getNeighbors(cell);
 
-    for (var i = 0; i < 8; i++) {
+    for (let i = 0; i < 8; i++) {
       var cellValue = this.matrix[neighbors[i]];
-      if (cellValue !== 0) {
+      if (cellValue !== Group.NONE) {
         total++;
         if (cellValue === thisCell) {
           like++;
@@ -295,6 +312,10 @@ export default class SegregationModel extends rx.Subject {
     return like / total;
   }
 
+  /**
+   * Wrap row/coord that are off the board
+   * Asteroids style
+   */
   torus(i) {
     if (i < 0) {
       return this.size + i;
@@ -312,7 +333,7 @@ export default class SegregationModel extends rx.Subject {
     var accumulator = 0;
     var total = 0;
     for (var i = 0; i < this.matrixLen; i++) {
-      if (this.matrix[i] === 0) {
+      if (this.matrix[i] === Group.NONE) {
         continue;
       }
       total++;
@@ -329,13 +350,22 @@ export default class SegregationModel extends rx.Subject {
     var unhappy = 0;
     var n = 0;
     for (var i = 0; i < this.matrixLen; i++) {
-      if (this.cellStatus[i] !== 0) {
+      if (this.cellStatus[i] !== Status.NONE) {
         n++;
-        if (this.cellStatus[i] === 2) {
+        if (this.cellStatus[i] === Status.UNHAPPY) {
           unhappy++;
         }
       }
     }
     return unhappy / n;
+  }
+
+  params() {
+    return {
+      size: this.size,
+      tolerance: this.tolerance,
+      n1: this.n1,
+      n2: this.n2
+    };
   }
 }
