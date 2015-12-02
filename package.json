@@ -1,9 +1,9 @@
 {
   "name": "models-of-self-organization",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Visualization and Sonification of Computational Models of Self-Organization",
   "main": "index.js",
-  "author": "Chris Sattinger",
+  "author": "Chris Sattinger <crucialfelix@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "asar": "^0.7.2",
