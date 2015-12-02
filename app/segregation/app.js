@@ -129,7 +129,7 @@ class SegregationApp {
    * Turn the sound engine on, waiting for events to spawn.
    */
   play() {
-    this.sound.play();
+    return this.sound.play();
   }
 
   /*

@@ -3,11 +3,24 @@ import sounds from './sounds';
 
 var sc = require('supercolliderjs');
 var rx = require('rx');
+var path = require('path');
 var _ = require('lodash');
 
 const synth = sc.dryads.synth;
 const group = sc.dryads.group;
+const server = sc.dryads.server;
 const compileSynthDef = sc.dryads.compileSynthDef;
+
+const options = {
+  // dirname is returning as though it were top of project
+  // I don't want to go into build
+  sclang: path.join(__dirname, 'vendor/supercollider/osx/sclang'),
+  scsynth: path.join(__dirname, 'vendor/supercollider/osx/scsynth'),
+  echo: true,
+  debug: false,
+  includePaths: [],
+  'sclang_conf': null
+};
 
 /**
  * For each changed cell it plays a blip or a blop.
@@ -35,11 +48,14 @@ export default class BlipBlop {
       });
     }
 
-    this.sound = group([
-      sc.dryads.interpreter(synthDefs),
-      sc.dryads.stream(this.soundStream)
-    ]);
-    this.sound();
+    this.sound = server([
+      group([
+        sc.dryads.interpreter(synthDefs, options),
+        sc.dryads.stream(this.soundStream)
+      ]),
+    ], options);
+
+    return this.sound();
   }
 
   setSubject(stream, params) {

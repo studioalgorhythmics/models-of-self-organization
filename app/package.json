@@ -3,7 +3,7 @@
   "productName": "Models of Self-Organization",
   "identifier": "ch.ixdm.algorhytmics.models-of-self-organization",
   "description": "Visualization and Sonification of Computational Models of Self-Organization",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "author": "Chris Sattinger <crucialfelix@gmail.com>",
   "main": "background.js",
   "config": {
@@ -15,6 +15,6 @@
     "fs-jetpack": "^0.7.0",
     "lodash": "^3.10.1",
     "rx": "^4.0.7",
-    "supercolliderjs": "^0.9.0"
+    "supercolliderjs": "crucialfelix/supercolliderjs#f4f5b147f452a994edbd04aa9e545492f840dfc0"
   }
 }
