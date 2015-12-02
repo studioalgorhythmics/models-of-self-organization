@@ -1,3 +1,6 @@
 build
 node_modules
 app/spec.js
+npm-debug.log
+app/vendor/supercollider
+tmp
