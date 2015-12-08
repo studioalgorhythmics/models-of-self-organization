@@ -9,7 +9,7 @@ var d3 = require('d3');
 var rx = require('rx');
 var _ = require('lodash');
 
-const boardSize = 500;
+const boardSize = 600;
 
 /**
  * Application class that connects the model, view, sound and controls together.
