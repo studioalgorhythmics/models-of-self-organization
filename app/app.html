@@ -70,37 +70,6 @@
        be the same number of group1 and group2 agents.
      </p>
 
-      <p>
-      The model is initialized by placing the cells randomly on the
-      board. <strong>Grid size</strong> sets the number of spaces and <strong>balance</strong> sets the ratio between group populations.</p>
-
-     <p>
-       The numbers on the right show the mean percentage of like
-       neighbors and the percentage of unhappy cells. The mean
-       percentage of like neighbors is the arithmetic mean of the
-       percentages of like neighbors to total neighbors for each
-       cell. More segregated layouts have higher numbers. The
-       percentage of unhappy cells is the percentage of the cells that
-       are currently unhappy. The graphs show the progression of these
-       statistics over the course of the model run.
-     </p>
-
-     <p>
-       The model is initialized by placing the cells randomly on the
-       board. On each step of the model, a randomly selected unhappy
-       cell is moved to a randomly selected vacant cell. Schelling's book <i>Micromotives and Macrobehavior</i> contains a good description of the model's
-       operation in general as well as its behavior under specific
-       circumstances, on pages 147&ndash;155 (in the 1978 paperback,
-       anyhow). The interface is based on <a href="https://github.com/mattwigway/segregation.js">Matthew Wigginton Conway's Segregation</a>
-       which is based on <a href="http://ccl.northwestern.edu/netlogo/models/Segregation">NetLogo
-       Segregation model</a>, and the choice of a random vacant cell
-       as the destination of each move was inspired
-       by <a href="http://web.mit.edu/rajsingh/www/lab/alife/schelling.html">Raj
-       Singh's implementation.</a> Edge effects are corrected by
-       treating the space as a torus; the top row is considered
-       adjacent to the bottom row and the rightmost column is
-       considered adjacent to the leftmost column.
-     </p>
     </div>
   </div>
 </body>
