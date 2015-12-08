@@ -1,0 +1,12 @@
+#!/bin/bash
+DIR="${BASH_SOURCE%/*}/SuperCollider.app/Contents";
+if [[ -z "$@" ]]; then
+  ARGS="-u 57110";
+else
+  ARGS="$@";
+fi
+if [[ -z "$SC_SYNTHDEF_PATH" ]]; then
+  export SC_SYNTHDEF_PATH="$DIR/Resources/synthdefs/"
+fi
+export SC_PLUGIN_PATH="$DIR/Resources/plugins/";
+exec "$DIR/MacOS/scsynth" $ARGS;
