@@ -70,7 +70,7 @@ class SegregationApp {
         }
       });
 
-    this.gui.add(this, 'speed', 10, 500);
+    this.gui.add(this, 'speed', 10, 10000);
     this.gui.add(this, 'dB', -130.0, 0.0).onChange((value) => {
       this.sound.dB = value;
     });
