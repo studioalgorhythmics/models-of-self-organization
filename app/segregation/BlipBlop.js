@@ -51,6 +51,18 @@ export default class BlipBlop {
   play() {
     this.soundStream = new rx.Subject();
 
+    // have to wait until after the others are done
+    // and there is no async tool for sequencing tasks like that yet.
+    var writeDefs = (context) => {
+      setTimeout(() => {
+        context.lang.interpret(`
+        SynthDescLib.default.synthDescs
+          .keysValuesDo({ arg defName, synthDesc;
+            synthDesc.def.writeDefFile("` + synthDefsDir + `");
+          });`);
+      }, 5000);
+    };
+
     var stack = [];
     if (options.sclang) {
       var synthDefs = [];
@@ -59,6 +71,7 @@ export default class BlipBlop {
           synthDefs.push(compileSynthDef(ss.defName, ss.source));
         });
       }
+      synthDefs.push(writeDefs);
       stack.push(sc.dryads.interpreter(synthDefs, options));
     } else {
       stack.push((context) => {
