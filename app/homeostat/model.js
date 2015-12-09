@@ -2,8 +2,8 @@
 var rx = require('rx');
 var _ = require('lodash');
 
-const THRESHOLD = 0.0005;
-const PERTURB_EVERY = 200;
+const THRESHOLD = 0.005;
+const PERTURB_EVERY = 10;
 
 /**
  * -1 .. 1
@@ -37,28 +37,30 @@ class Unit {
 
   randomize() {
     this.weights = _.map(Array(this.numConnections), rnd);
+    console.log('rnd', this.index);
   }
 
-  next(outputValues, ei) {
+  next(outputValues, visc, ei) {
     var output = _.reduce(outputValues, (sum, unitOutput, ui) => {
       return sum + (unitOutput * this.weights[ui]);
     }, 0.0, this);
-    // smooth with viscosity here ?
-    this.output = clip(output);
-    // I think you shouldn't clip, you should perturb to get it back in
-    // if > threshold then enter perturb mode
+    // smooth with lag
+    var newVal = this.output + (visc * (output - this.output));
+    this.output = clip(newVal);
+
+    // if < threshold or clipping then enter perturb mode
     this.perhapsPerturb();
   }
 
   perhapsPerturb() {
     if (this.perturbCycle === 0) {
-      if (this.isConverged()) {
+      if (this.isConverged() || this.isClipping()) {
         this.randomize();
         this.perturbCycle = 1;
         return true;
       }
     } else if (this.perturbCycle === PERTURB_EVERY) {
-      this.randomize();
+      // this.randomize();
       this.perturbCycle = 0;
       return true;
     } else {
@@ -69,6 +71,10 @@ class Unit {
 
   isConverged() {
     return Math.abs(this.output) <= THRESHOLD;
+  }
+
+  isClipping() {
+    return Math.abs(this.output) >= 0.999;
   }
 }
 
@@ -98,7 +104,9 @@ export default class Homeostat extends rx.Subject {
 
   next() {
     var outputs = _.map(this.units, (unit) => Math.abs(unit.output));
-    _.each(this.units, (unit) => unit.next(outputs, this.eventNum));
+    _.each(this.units, (unit) => {
+      unit.next(outputs, this.viscosity, this.eventNum);
+    });
     var event = {
       eventNum: this.eventNum,
       units: this.units  // _.map(this.units, (u) => this.unitData(u))
