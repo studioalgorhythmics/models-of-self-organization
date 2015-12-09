@@ -18,6 +18,9 @@ class HomeostatApp {
     this.speed = 250;
     this.dB = -10;
 
+    this.numUnits = 4;
+    this.viscosity = 0.675;
+
     this.view = new View('#board svg', 500);
     // this.sound = new BlipBlop();
     this.buildModel();
@@ -30,55 +33,40 @@ class HomeostatApp {
       // should just use animation next frame
       this.stepper = setTimeout(this.stepperFn, this.ms());
     };
+
+    this.controlsGui();
   }
 
-  // controlsGui() {
-  //   this.gui = new window.dat.GUI({autoPlace: false});
-  //   // #controls
-  //   this.gui.add(this, 'tolerance', 0.0, 1.0, 0.01).name('Intolerance')
-  //     .onChange((value) => {
-  //       this.buildModel();
-  //       if (this.isPlaying) {
-  //         this.start();
-  //       }
-  //     });
-  //   this.gui.add(this, 'fill', 0.0, 1.0, 0.01)
-  //     .onChange((value) => {
-  //       this.buildModel();
-  //       if (this.isPlaying) {
-  //         this.start();
-  //       }
-  //     });
-  //   this.gui.add(this, 'gridSize', 2.0, 40.0, 1)
-  //     .onChange((value) => {
-  //       this.buildModel();
-  //       if (this.isPlaying) {
-  //         this.start();
-  //       }
-  //     });
-  //   this.gui.add(this, 'balance', 0.0, 100.0, 1)
-  //     .onChange((value) => {
-  //       this.buildModel();
-  //       if (this.isPlaying) {
-  //         this.start();
-  //       }
-  //     });
-  //
-  //   this.gui.add(this, 'speed', 10, 500);
-  //   this.gui.add(this, 'dB', -130.0, 0.0).onChange((value) => {
-  //     this.sound.dB = value;
-  //   });
-  //   // select sonifier
-  //
-  //   this.gui.add(this, 'start');
-  //   this.gui.add(this, 'stop');
-  //   this.gui.add(this, 'restart');
-  //
-  //   this.addSoundSelector();
-  //   this.addSoundParamControls();
-  //
-  //   document.getElementById('controls').appendChild(this.gui.domElement);
-  // }
+  controlsGui() {
+    this.gui = new window.dat.GUI({autoPlace: false});
+    // #controls
+    this.gui.add(this, 'numUnits', 4, 100, 1).name('Number')
+      .onChange((value) => {
+        this.buildModel();
+        if (this.isPlaying) {
+          this.start();
+        }
+      });
+    this.gui.add(this, 'viscosity', 0.0, 1.0, 0.01)
+      .onChange((value) => {
+        this.model.viscosity = value;
+      });
+
+    this.gui.add(this, 'speed', 10, 500);
+    // this.gui.add(this, 'dB', -130.0, 0.0).onChange((value) => {
+    //   this.sound.dB = value;
+    // });
+    // select sonifier
+
+    this.gui.add(this, 'start');
+    this.gui.add(this, 'stop');
+    this.gui.add(this, 'restart');
+
+    // this.addSoundSelector();
+    // this.addSoundParamControls();
+
+    document.getElementById('controls').appendChild(this.gui.domElement);
+  }
   //
   // addSoundSelector() {
   //   if (this.soundSelector) {
@@ -105,7 +93,7 @@ class HomeostatApp {
   // }
   //
   buildModel() {
-    this.model = new Model(8);
+    this.model = new Model(this.numUnits, this.viscosity);
 
     var multicast = this.model.publish();
     this.view.setSubject(multicast, this.model.params());
@@ -155,7 +143,6 @@ class HomeostatApp {
 export default function main() {
 
   const app = new HomeostatApp();
-  // app.controlsGui();
 
   // always playing, ready for events
   // app.play();
