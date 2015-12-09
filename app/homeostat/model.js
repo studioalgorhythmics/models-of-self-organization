@@ -78,11 +78,12 @@ class Unit {
  * The original homeostat consisted of four identical units, supplied with DC current, and connected so that the input for each unit consisted of the output from the other three. Each input to each unit was modified by a commutator and a potentiometer which controlled the polarity and strength of the incoming signal respectively. The amount of current reaching each unit was measured by an indicator needle whose stable (or preferred) position was a narrow zone near the center of the dial. The output of each unit was proportional to the distance of the indicator needle from the center position. When the needles of a unit were centered, the current values of the potentiometer/commutator remained unchanging. When the needle diverged from its central position, a relay was closed which energized a mechanism to randomly assign, at 3-second intervals, new values to each of the potentiometer/commutator elements of the unit until the needle returned to its central position.
  * http://www.well.com/~kbk/dissertation/chapter04/
  */
-export default class Homeostat {
+export default class Homeostat extends rx.Subject {
 
   constructor(numUnits, viscosity) {
+    super();
     this.numUnits = numUnits || 4;
-    this.viscocity = viscosity || 0.675;
+    this.viscosity = viscosity || 0.675;
     this.units = _.map(Array(this.numUnits),
       (nil, i) => new Unit(i, this.numUnits));
     this.eventNum = 0;
@@ -100,9 +101,17 @@ export default class Homeostat {
     _.each(this.units, (unit) => unit.next(outputs, this.eventNum));
     var event = {
       eventNum: this.eventNum,
-      units: _.map(this.units, (u) => this.unitData(u))
+      units: this.units  // _.map(this.units, (u) => this.unitData(u))
     };
     this.eventNum += 1;
+    this.onNext(event);
     return event;
+  }
+
+  params() {
+    return {
+      numUnits: this.numUnits,
+      viscosity: this.viscosity
+    };
   }
 }
