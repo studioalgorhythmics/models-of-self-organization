@@ -39,11 +39,20 @@ export default class HomeostatView {
   }
 
   initLayout() {
+    // force layout doesn't keep that from overlapping
+    // switch to tidy tree
+    var unitSize = (this.pxSize / Math.sqrt(this.modelParams.numUnits)) * 0.5;
+    console.log('unitSize', unitSize);
+    var linkDistance = unitSize * 2;
+    console.log('linkDistance', linkDistance);
+    var charge = (0 - unitSize) * 6;
+    console.log('charge', charge);
+
     var force = d3.layout.force();
     force
       .size([this.pxSize, this.pxSize])
-      .charge(-800)  // node repulsion
-      .linkDistance(this.pxSize / this.modelParams.numUnits);
+      .charge(charge)  // node repulsion
+      .linkDistance(linkDistance);
 
     var link = this.svg.selectAll('.link');
     var unit = this.svg.selectAll('.unit');
@@ -71,14 +80,20 @@ export default class HomeostatView {
     force.nodes(this.unitPositions);
 
     // join units to the force layout managed units
-    this.units = unit.data(this.unitPositions)
+    this.units = unit.data(this.unitPositions);
+
+    this.units.exit().remove();
+
+    this.units
       .enter()
         .append('rect')
-        .attr('class', 'unit')
-        .attr('width', 50)
-        .attr('height', 50)
-        .attr('x', (d) => d.x)
-        .attr('y', (d) => d.y);
+        .attr('class', 'unit');
+
+    this.units
+      .attr('x', (d) => d.x)
+      .attr('y', (d) => d.y)
+      .attr('width', unitSize)
+      .attr('height', unitSize);
 
     // link = link.data(graph.links)
     //   .enter().append("line")
@@ -88,11 +103,19 @@ export default class HomeostatView {
   }
 
   update(event) {
-    // force layout already does unit position
-    // lines are drawn
-    // just update the output and weights
+    // console.log(event);
 
-    console.log(event);
+    // color crossing through white:
+    this.units
+      .transition()
+      .style('fill', (d, i) => {
+        var output = event.units[i].output;
+        var level = 1 - Math.abs(output);
+        var color = d3.hsl(output > 0 ? 20 : 333, level, level);
+        // console.log('output', output, color);
+        return color.toString();
+      });
+
     // line strength
     // output level
   }
