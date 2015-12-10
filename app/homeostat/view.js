@@ -1,6 +1,8 @@
 var d3 = require('d3');
 var _ = require('lodash');
 
+const drawLinks = false;
+
 /**
  * d3 view for a Homeostat
  *
@@ -41,70 +43,107 @@ export default class HomeostatView {
   initLayout() {
     // force layout doesn't keep that from overlapping
     // switch to tidy tree
-    var unitSize = (this.pxSize / Math.sqrt(this.modelParams.numUnits)) * 0.5;
-    console.log('unitSize', unitSize);
-    var linkDistance = unitSize * 2;
-    console.log('linkDistance', linkDistance);
-    var charge = (0 - unitSize) * 6;
-    console.log('charge', charge);
+    var sqrtUnits = Math.sqrt(this.modelParams.numUnits);
+    var unitSize = (this.pxSize / sqrtUnits) * 0.5;
+    this.unitSize = unitSize;
+    // console.log('unitSize', unitSize);
+    var linkDistance = unitSize * 5;
+    // console.log('linkDistance', linkDistance);
+    var charge = (0 - unitSize) * 4;
+    charge = -150;
+    // charge gets smaller as numUnits increases
+    // console.log('charge', charge);
 
     var force = d3.layout.force();
     force
       .size([this.pxSize, this.pxSize])
+      .gravity(0.6)
+      .friction(0.5)
       .charge(charge)  // node repulsion
       .linkDistance(linkDistance);
 
-    var link = this.svg.selectAll('.link');
     var unit = this.svg.selectAll('.unit');
-
-    force.on('tick', () => {
-      link
-        .attr('x1', (d) => d.source.x)
-        .attr('y1', (d) => d.source.y)
-        .attr('x2', (d) => d.target.x)
-        .attr('y2', (d) => d.target.y);
-
-      this.units
-        .attr('x', (d) => d.x)
-        .attr('y', (d) => d.y);
-    });
 
     // add units to force layout
     // https://github.com/mbostock/d3/wiki/Force-Layout#nodes
     // This sets and maintains x y on those objects
     this.unitPositions = [];
     for (let i = 0; i < this.modelParams.numUnits; i++) {
-      this.unitPositions.push({index: i});
+      this.unitPositions.push({
+        index: i,
+        // still coming in from outer space
+        // should start in middle
+        x: 0.5, // this.pxSize / 2,
+        y: 0.5 // this.pxSize / 2
+      });
     }
 
     force.nodes(this.unitPositions);
 
+    // better to use a node tree ?
+    var linksData =  [];
+    _.each(this.unitPositions, (up, i) => {
+      _.each(this.unitPositions, (upb, ii) => {
+        if (i !== ii) {
+          linksData.push({
+            source: i,
+            target: ii
+          });
+        }
+      });
+    });
+
+    force.links(linksData);
+
+    if (drawLinks) {
+      var link = this.svg.selectAll('.link');
+      var links = link.data(linksData);
+      links.exit().remove();
+      this.links = links
+        .enter().append('line')
+        .attr('class', 'link');
+    }
+
     // join units to the force layout managed units
     this.units = unit.data(this.unitPositions);
-
     this.units.exit().remove();
 
     this.units
       .enter()
         .append('rect')
         .attr('class', 'unit');
+    // .call(force.drag);
 
     this.units
-      .attr('x', (d) => d.x)
-      .attr('y', (d) => d.y)
+      .attr('x', (d) => d.x = this.clip(d.x))
+      .attr('y', (d) => d.y = this.clip(d.y))
       .attr('width', unitSize)
       .attr('height', unitSize);
 
-    // link = link.data(graph.links)
-    //   .enter().append("line")
-    //     .attr("class", "link");
+    force.on('tick', () => {
+      if (drawLinks) {
+        link
+          .attr('x1', (d) => d.source.x)
+          .attr('y1', (d) => d.source.y)
+          .attr('x2', (d) => d.target.x)
+          .attr('y2', (d) => d.target.y);
+      }
+
+      // constrain them by the frame
+      // and write values back to the unitPositions
+      this.units
+        .attr('x', (d) => d.x = this.clip(d.x))
+        .attr('y', (d) => d.y = this.clip(d.y));
+    });
 
     force.start();
   }
 
-  update(event) {
-    // console.log(event);
+  clip(v) {
+    return Math.max(0, Math.min(this.pxSize - this.unitSize, v));
+  }
 
+  update(event) {
     // color crossing through white:
     this.units
       .transition()
@@ -112,11 +151,28 @@ export default class HomeostatView {
         var output = event.units[i].output;
         var level = 1 - Math.abs(output);
         var color = d3.hsl(output > 0 ? 20 : 333, level, level);
-        // console.log('output', output, color);
         return color.toString();
       });
 
-    // line strength
-    // output level
+    // output level as text
+
+    // draw connecting links
+    if (drawLinks) {
+      var getUnit = (index) => {
+        return this.unitPositions[index];
+      };
+      // only update if force is still moving
+      // going to top left
+      var halfWidth =  this.unitSize / 2;
+
+      this.links
+        .attr({
+          x1: (d, i) => getUnit(d.source.index).x + halfWidth,
+          x2: (d, i) => getUnit(d.target.index).x + halfWidth,
+          y1: (d, i) => getUnit(d.source.index).y + halfWidth,
+          y2: (d, i) => getUnit(d.target.index).y + halfWidth,
+        });
+      // line strength
+    }
   }
 }
