@@ -104,8 +104,9 @@ export default class Homeostat extends rx.Subject {
 
   next() {
     var outputs = _.map(this.units, (unit) => Math.abs(unit.output));
+    var visc = 1 - this.viscosity;
     _.each(this.units, (unit) => {
-      unit.next(outputs, this.viscosity, this.eventNum);
+      unit.next(outputs, visc, this.eventNum);
     });
     var event = {
       eventNum: this.eventNum,
