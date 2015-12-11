@@ -3,6 +3,7 @@
 import Model from  './model';
 import View from  './view';
 import Sound from './sound';
+import {minSide, windowSize} from '../utils';
 
 // external npm packages use require
 var d3 = require('d3');
@@ -21,7 +22,13 @@ export default class HomeostatApp {
     this.numUnits = 4;
     this.viscosity = 0.4;
 
-    this.view = new View('#board svg', 500);
+    this.render(el);
+    var ws = windowSize();
+    var width = Math.min(minSide(el), ws.width) - 250;
+    var height = Math.min(width, ws.height);
+    var pxSize = Math.min(width, height);
+    this.view = new View('#board svg', pxSize);
+
     this.sound = new Sound();
     this.buildModel();
 

@@ -3,13 +3,12 @@
 import SegregationModel from  './model';
 import SegregationView from  './view';
 import BlipBlop from './BlipBlop';
+import {minSide, windowSize} from '../utils';
 
 // external npm packages use require
 var d3 = require('d3');
 var rx = require('rx');
 var _ = require('lodash');
-
-const boardSize = 600;
 
 /**
  * Application class that connects the model, view, sound and controls together.
@@ -26,6 +25,11 @@ export default class SegregationApp {
     this.dB = -10;
 
     this.render(el);
+
+    var ws = windowSize();
+    var width = Math.min(minSide(el), ws.width) - 20 - 250;
+    this.view = new SegregationView('#board svg', '#statistics svg', width);
+
     this.sound = new BlipBlop();
     this.buildModel();
 
