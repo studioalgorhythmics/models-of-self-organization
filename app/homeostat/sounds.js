@@ -97,7 +97,57 @@ const pulse2 = {
   }
 };
 
+const powerToPitch = {
+  defName: 'powerToPitch',
+  source: `
+    { arg out=0, fundFreq = 440.0, formFreq = 1760.0, bwFreq = 880.0,
+        timeScale=1.0, levelScale=1.0, dur=1.0, amp=1.0;
+      var p = Formant.ar([fundFreq, fundFreq + 2], formFreq, bwFreq, amp) *
+        EnvGen.kr(Env.linen(0.01, 1, 0.05),
+          timeScale: timeScale * dur,
+          levelScale: levelScale,
+          doneAction: 2);
+      Out.ar(out, p);
+    }
+  `,
+  args: (index, output, dur) => {
+    var abs = Math.abs(output);
+    var inv = 1 - abs;
+    // 0..1 sine wave with peaks at -0.5 and 0.5
+    var wav = 0.5 * (1 - Math.cos(2 * output * Math.PI));
+
+    // output -> freq
+    // wav -> formant
+    // index -> bwfreq
+
+    const base = 40;
+    var note = sc.map.linToLin(-1, 1, base, base + 24, output);
+    // console.log('output', output, 'note', note);
+    return {
+      fundFreq: sc.map.midiToFreq(note),
+      formFreq: sc.map.linToLin(0, 1, 100, 1200, wav),
+      bwFreq: Math.min(sc.map.midiToFreq(index * 3 + 30), 12000),
+      levelScale: 1,
+      dur: dur
+    };
+  },
+  // extra args that are modulateable with sliders
+  params: {
+    timeScale: {
+      default: 1,
+      minval: 0.1,
+      maxval: 4.0
+    }
+    // bwFreq: {
+    //   default: 900,
+    //   minval: 200,
+    //   maxval: 6000
+    // }
+  }
+};
+
 export default {
   pulse,
-  pulse2
+  pulse2,
+  powerToPitch
 };
