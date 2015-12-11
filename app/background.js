@@ -151,7 +151,7 @@ app.on('ready', function() {
   if (env.name === 'test') {
     mainWindow.loadUrl('file://' + __dirname + '/spec.html');
   } else {
-    mainWindow.loadUrl('file://' + __dirname + '/app.html');
+    mainWindow.loadUrl('file://' + __dirname + '/page.html');
   }
 
   if (env.name !== 'production') {
