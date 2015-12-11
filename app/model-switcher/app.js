@@ -2,13 +2,6 @@
 import segregation from './../segregation/app';
 import homeostat from './../homeostat/app';
 
-// var jetpack = require('fs-jetpack');
-// var jade = require('jade');
-// var path = require('path');
-
-// needs to be relative to build/
-// const tpl = path.join(__dirname, 'body.jade');
-
 export default class ModelSwitcher {
 
   constructor(el) {
@@ -30,10 +23,16 @@ export default class ModelSwitcher {
   }
 
   selectModel(name) {
+    if (this.currentModel === name) {
+      return;
+    }
     if (this.app) {
       this.app.unload();
     }
-    // this.app = this.models[name](this.el);
+    const App = this.models[name];
+    if (App) {
+      this.app = new App(this.el);
+    }
   }
 
   /**
