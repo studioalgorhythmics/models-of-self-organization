@@ -9,6 +9,16 @@
   },
   "author": "Chris Sattinger <crucialfelix@gmail.com>",
   "license": "MIT",
+  "keywords": [
+    "models",
+    "modelling",
+    "self-organizing",
+    "visualization",
+    "sonfication",
+    "sound",
+    "supercolider",
+    "d3"
+  ],
   "devDependencies": {
     "asar": "^0.7.2",
     "electron-prebuilt": "^0.34.0",
