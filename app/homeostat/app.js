@@ -19,7 +19,7 @@ class HomeostatApp {
     this.dB = -10;
 
     this.numUnits = 4;
-    this.viscosity = 0.675;
+    this.viscosity = 0.4;
 
     this.view = new View('#board svg', 500);
     this.sound = new Sound();
