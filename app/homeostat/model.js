@@ -37,7 +37,7 @@ class Unit {
 
   randomize() {
     this.weights = _.map(Array(this.numConnections), rnd);
-    console.log('rnd', this.index);
+    console.log('randomize weights:', this.index);
   }
 
   next(outputValues, visc, ei) {
@@ -74,7 +74,7 @@ class Unit {
   }
 
   isClipping() {
-    return Math.abs(this.output) >= 0.999;
+    return Math.abs(this.output) >= (1.0 - THRESHOLD);
   }
 }
 
@@ -89,7 +89,7 @@ export default class Homeostat extends rx.Subject {
   constructor(numUnits, viscosity) {
     super();
     this.numUnits = numUnits || 4;
-    this.viscosity = viscosity || 0.675;
+    this.viscosity = viscosity || 0.4;
     this.units = _.map(Array(this.numUnits),
       (nil, i) => new Unit(i, this.numUnits));
     this.eventNum = 0;

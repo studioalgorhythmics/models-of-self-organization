@@ -38,7 +38,7 @@ class HomeostatApp {
 
   controlsGui() {
     this.gui = new window.dat.GUI({autoPlace: false});
-    this.gui.add(this, 'numUnits', 4, 100, 1).name('Number')
+    this.gui.add(this, 'numUnits', 4, 40, 1).name('Number')
       .onChange((value) => {
         this.buildModel();
         if (this.isPlaying) {
