@@ -74,7 +74,7 @@ export default class Sound {
       var output = unit.output;
       if ((output >= 0.02) && (output <= 0.98)) {
         // var level = 1 - Math.abs(output);
-        var args = sd.args(i, output, this.bpm / 60);
+        var args = sd.args(i, output, 1 / (this.bpm / 60));
         args = _.assign(args,
           this.params,
           {
