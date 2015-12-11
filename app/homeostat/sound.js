@@ -29,6 +29,7 @@ export default class Sound {
       this.setSubject(stream, params);
     }
     this.dB = -25;
+    this.bpm = 60;
     this.soundSet = _.shuffle(_.keys(sounds))[0];
     this.initializeParams();
   }
@@ -68,23 +69,35 @@ export default class Sound {
   update(event) {
     // console.log('sound', event);
     var synths = [];
-    var si = 0;
     var sd = sounds[this.soundSet];
     event.units.forEach((unit, i) => {
       var output = unit.output;
-      if ((output >= 0.05) && (output <= 0.95)) {
+      if ((output >= 0.02) && (output <= 0.98)) {
         // var level = 1 - Math.abs(output);
-        var args = sd.args(i, output);
+        var args = sd.args(i, output, this.bpm / 60);
         args = _.assign(args,
           this.params,
-          {amp: sc.map.dbToAmp(this.dB)});
+          {
+            amp: sc.map.dbToAmp(this.dB)
+          });
         var sy = synth(sd.defName, args);
-        setTimeout(() => {
-          this.soundStream.onNext(sy);
-        }, si * 100);
-        si += 1;
+        sy.i = i;
+        synths.push(sy);
       }
     });
+    // switch timing mode
+    // even with gaps: loopMs / numUnits * i
+    // strum: 100ms
+    // polyrhythm no gaps: loopMs / playing-num-units * si
+    var beat = this.bpm / 60 * 1000;
+    var dur = beat / (synths.length || 1);
+    _.each(synths, (sy, si) => {
+      setTimeout(() => {
+        this.soundStream.onNext(sy);
+      }, si * dur);
+      // console.log('dur', dur, 'si', si, 'delay', si * dur);
+    });
+
   }
 
   initializeParams() {

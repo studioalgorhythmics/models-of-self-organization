@@ -50,7 +50,12 @@ class HomeostatApp {
         this.model.viscosity = value;
       });
 
-    this.gui.add(this, 'speed', 10, 500);
+    this.gui.add(this, 'speed', 10, 500)
+      .onChange((value) => {
+        this.sound.bpm = value;
+      });
+    this.sound.bpm = this.speed;
+
     this.gui.add(this, 'dB', -130.0, 0.0).onChange((value) => {
       this.sound.dB = value;
     });

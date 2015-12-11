@@ -8,10 +8,10 @@ const pulse = {
   defName: 'pulse',
   source:
     `{ arg out=0, freq=440, width=0.5,
-        ffreq=440, rq=1, timeScale=1.0, levelScale=1.0, amp=1.0;
+        ffreq=440, rq=1, timeScale=1.0, levelScale=1.0, dur=1.0, amp=1.0;
         var p = Pulse.ar(freq, width, amp) *
-          EnvGen.kr(Env.perc(0.01, 0.2),
-            timeScale: timeScale,
+          EnvGen.kr(Env.perc(0.01, 1),
+            timeScale: timeScale * dur,
             levelScale: levelScale,
             doneAction: 2);
         var f = BPF.ar(p, ffreq, rq);
@@ -24,7 +24,8 @@ const pulse = {
       freq: sc.map.midiToFreq(index * 2 + 50),
       ffreq: Math.min(sc.map.midiToFreq(index * 3 + 64), 12000),
       width: 1 - Math.abs(output),
-      levelScale: (1 - Math.abs(output)) * 1.1
+      levelScale: (1 - Math.abs(output)) * 1.1,
+      dur: dur
     };
   },
   // extra args that are modulateable with sliders
