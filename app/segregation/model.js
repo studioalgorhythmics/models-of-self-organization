@@ -34,7 +34,7 @@ export default class SegregationModel extends rx.Subject {
    */
   constructor(size, tolerance, n1, n2) {
     super();
-    this.init(size, tolerance, n1, n2);
+    this.init(size || 40, tolerance || 0.3, n1 || 17, n2 || 16);
   }
 
   /**
