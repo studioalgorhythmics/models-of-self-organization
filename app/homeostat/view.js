@@ -1,8 +1,6 @@
 var d3 = require('d3');
 var _ = require('lodash');
 
-const drawLinks = true;
-
 /**
  * d3 view for a Homeostat
  *
@@ -54,6 +52,8 @@ export default class HomeostatView {
     // charge gets smaller as numUnits increases
     // console.log('charge', charge);
 
+    this.drawLinks = this.modelParams.numUnits <= 20;
+
     var force = d3.layout.force();
     force
       .size([this.pxSize, this.pxSize])
@@ -95,15 +95,17 @@ export default class HomeostatView {
 
     force.links(linksData);
 
-    if (drawLinks) {
-      // should be in a separate g below
-      var link = this.svg.selectAll('.link');
+    // should be in a separate g below
+    var link = this.svg.selectAll('.link');
+    if (this.drawLinks) {
       this.links = link.data(linksData);
-      this.links.exit().remove();
-      this.links.enter()
-        .append('line')
-        .attr('class', 'link');
+    } else {
+      this.links = link.data([]);
     }
+    this.links.exit().remove();
+    this.links.enter()
+      .append('line')
+      .attr('class', 'link');
 
     // join units to the force layout managed units
     this.units = unit.data(this.unitPositions);
@@ -121,7 +123,6 @@ export default class HomeostatView {
       .attr('width', unitSize)
       .attr('height', unitSize);
 
-
     force.on('tick', () => {
       // constrain them by the frame
       // and write values back to the unitPositions
@@ -129,7 +130,7 @@ export default class HomeostatView {
         .attr('x', (d) => d.x = this.clip(d.x))
         .attr('y', (d) => d.y = this.clip(d.y));
 
-      if (drawLinks) {
+      if (this.drawLinks) {
         this.updateLinks();
       }
     });
