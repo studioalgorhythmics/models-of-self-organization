@@ -1,7 +1,7 @@
 var d3 = require('d3');
 var _ = require('lodash');
 
-const drawLinks = false;
+const drawLinks = true;
 
 /**
  * d3 view for a Homeostat
@@ -96,11 +96,12 @@ export default class HomeostatView {
     force.links(linksData);
 
     if (drawLinks) {
+      // should be in a separate g below
       var link = this.svg.selectAll('.link');
-      var links = link.data(linksData);
-      links.exit().remove();
-      this.links = links
-        .enter().append('line')
+      this.links = link.data(linksData);
+      this.links.exit().remove();
+      this.links.enter()
+        .append('line')
         .attr('class', 'link');
     }
 
@@ -120,20 +121,17 @@ export default class HomeostatView {
       .attr('width', unitSize)
       .attr('height', unitSize);
 
-    force.on('tick', () => {
-      if (drawLinks) {
-        link
-          .attr('x1', (d) => d.source.x)
-          .attr('y1', (d) => d.source.y)
-          .attr('x2', (d) => d.target.x)
-          .attr('y2', (d) => d.target.y);
-      }
 
+    force.on('tick', () => {
       // constrain them by the frame
       // and write values back to the unitPositions
       this.units
         .attr('x', (d) => d.x = this.clip(d.x))
         .attr('y', (d) => d.y = this.clip(d.y));
+
+      if (drawLinks) {
+        this.updateLinks();
+      }
     });
 
     force.start();
@@ -154,25 +152,29 @@ export default class HomeostatView {
         return color.toString();
       });
 
-    // output level as text
+    // output level as text or needle
 
-    // draw connecting links
     if (drawLinks) {
-      var getUnit = (index) => {
-        return this.unitPositions[index];
-      };
-      // only update if force is still moving
-      // going to top left
-      var halfWidth =  this.unitSize / 2;
-
-      this.links
-        .attr({
-          x1: (d, i) => getUnit(d.source.index).x + halfWidth,
-          x2: (d, i) => getUnit(d.target.index).x + halfWidth,
-          y1: (d, i) => getUnit(d.source.index).y + halfWidth,
-          y2: (d, i) => getUnit(d.target.index).y + halfWidth,
-        });
-      // line strength
+      this.updateLinks();
     }
+  }
+
+  updateLinks() {
+    var getUnit = (index) => {
+      return this.unitPositions[index];
+    };
+
+    // only update if force is still moving
+    // going to top left
+    var halfWidth =  this.unitSize / 2;
+
+    this.links
+      .attr({
+        x1: (d, i) => getUnit(d.source.index).x + halfWidth,
+        x2: (d, i) => getUnit(d.target.index).x + halfWidth,
+        y1: (d, i) => getUnit(d.source.index).y + halfWidth,
+        y2: (d, i) => getUnit(d.target.index).y + halfWidth,
+      });
+    // line strength
   }
 }
