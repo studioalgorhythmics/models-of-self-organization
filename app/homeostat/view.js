@@ -154,9 +154,10 @@ export default class HomeostatView {
 
     // output level as text or needle
 
-    if (drawLinks) {
-      this.updateLinks();
-    }
+    // positions are updated by tick
+    // if (drawLinks) {
+    //   this.updateLinks();
+    // }
   }
 
   updateLinks() {
