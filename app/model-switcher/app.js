@@ -2,6 +2,11 @@
 import segregation from '../segregation/app';
 import homeostat from '../homeostat/app';
 
+const models = {
+  segregation,
+  homeostat
+};
+
 var sc = require('supercolliderjs');
 var rx = require('rx');
 var path = require('path');
@@ -37,16 +42,11 @@ export default class ModelSwitcher {
 
   constructor(el) {
     this.el = el;
-
-    this.models = {
-      segregation,
-      homeostat
-    };
   }
 
   showIndex() {
     // var vars = {
-    //   models: this.models
+    //   models: models
     // };
     // var html = jade.render(jetpack.read(tpl), vars);
     // console.log(html);
@@ -60,7 +60,7 @@ export default class ModelSwitcher {
     if (this.app) {
       this.app.unload();
     }
-    const App = this.models[name];
+    const App = models[name];
     if (App) {
       this.app = new App(this.el);
       this.spawnSound(this.app.sound.output());

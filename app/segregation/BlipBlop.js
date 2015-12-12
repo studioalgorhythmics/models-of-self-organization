@@ -8,29 +8,7 @@ var _ = require('lodash');
 
 const synth = sc.dryads.synth;
 const group = sc.dryads.group;
-const server = sc.dryads.server;
 const compileSynthDef = sc.dryads.compileSynthDef;
-
-/**
- * env is loaded from config/env_(development|production|test).json
- * You can set options to pass in supercollider options,
- * specifically a path to a working sclang which will then be used
- * to compile synthDefs. If not set (the default) then the app will
- * load pre-compiled synthDefs from ./synthdefs
- */
-var env = window.env || {};
-
-const options = _.defaults(env.options || {}, {
-  // This copy was still not portable due to Qt dylib errors:
-  // sclang: path.join(__dirname, 'vendor/supercollider/osx/sclang'),
-  scsynth: path.join(__dirname, 'vendor/supercollider/osx/scsynth'),
-  echo: true,
-  debug: false,
-  includePaths: [],
-  'sclang_conf': null
-});
-
-const synthDefsDir = path.join(__dirname, 'synthdefs');
 
 /**
  * For each changed cell it plays a blip or a blop.

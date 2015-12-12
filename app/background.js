@@ -3,6 +3,8 @@
 // It doesn't have any windows which you can see on screen, but we can open
 // window from here.
 
+import modelNames from './menu';
+
 var app = require('app');
 var BrowserWindow = require('browser-window');
 var env = require('./vendor/electron_boilerplate/env_config');
@@ -10,6 +12,7 @@ var devHelper = require('./vendor/electron_boilerplate/dev_helper');
 var windowStateKeeper = require('./vendor/electron_boilerplate/window_state');
 
 var Menu = require('menu');
+var _ = require('lodash');
 
 var mainWindow;
 
@@ -19,13 +22,30 @@ var mainWindowState = windowStateKeeper('main', {
   height: 600
 });
 
+function modelMenuItems() {
+  var items = [];
+  var i = 1;
+  _.each(modelNames, (name, key) => {
+    items.push({
+      label: name,
+      accelerator: 'Command+' + i,
+      click: function() {
+        BrowserWindow.getFocusedWindow()
+          .webContents.send('select-model', key);
+      }
+    });
+    i += 1;
+  });
+  return items;
+}
+
 function makeMenu() {
   var template = [
     {
-      label: 'Models of Segregation',
+      label: 'Models of Self-Organization',
       submenu: [
         {
-          label: 'About Models of Segregation',
+          label: 'About Models of Self-Organization',
           selector: 'orderFrontStandardAboutPanel:'
         },
         {
@@ -39,7 +59,7 @@ function makeMenu() {
           type: 'separator'
         },
         {
-          label: 'Hide Electron',
+          label: 'Hide Models of Self-Organization',
           accelerator: 'Command+H',
           selector: 'hide:'
         },
@@ -59,29 +79,12 @@ function makeMenu() {
           label: 'Quit',
           accelerator: 'Command+Q',
           click: function() { app.quit(); }
-        },
+        }
       ]
     },
     {
       label: 'Models',
-      submenu: [
-        {
-          label: 'Segregation',
-          accelerator: 'Command+1',
-          click: function() {
-            BrowserWindow.getFocusedWindow()
-              .webContents.send('select-model', 'segregation');
-          }
-        },
-        {
-          label: 'Homeostat',
-          accelerator: 'Command+2',
-          click: function() {
-            BrowserWindow.getFocusedWindow()
-              .webContents.send('select-model', 'homeostat');
-          }
-        }
-      ]
+      submenu: modelMenuItems()
     },
     {
       label: 'View',
@@ -99,7 +102,7 @@ function makeMenu() {
           click: function() {
             BrowserWindow.getFocusedWindow().toggleDevTools();
           }
-        },
+        }
       ]
     },
     {
@@ -114,25 +117,14 @@ function makeMenu() {
           label: 'Close',
           accelerator: 'Command+W',
           selector: 'performClose:'
-        },
-        {
-          type: 'separator'
-        },
-        {
-          label: 'Bring All to Front',
-          selector: 'arrangeInFront:'
-        },
+        }
       ]
-    },
-    {
-      label: 'Help',
-      submenu: []
-    },
+    }
   ];
 
   var menu = Menu.buildFromTemplate(template);
 
-  Menu.setApplicationMenu(menu); // Must be called within app.on('ready', function(){ ... });
+  Menu.setApplicationMenu(menu);
 }
 
 app.on('ready', function() {
