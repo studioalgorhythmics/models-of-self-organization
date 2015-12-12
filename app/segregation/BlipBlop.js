@@ -48,45 +48,23 @@ export default class BlipBlop {
     this.initializeParams();
   }
 
-  play() {
-    this.soundStream = new rx.Subject();
-
-    // have to wait until after the others are done
-    // and there is no async tool for sequencing tasks like that yet.
-    var writeDefs = (context) => {
-      setTimeout(() => {
-        context.lang.interpret(`
-        SynthDescLib.default.synthDescs
-          .keysValuesDo({ arg defName, synthDesc;
-            synthDesc.def.writeDefFile("` + synthDefsDir + `");
-          });`);
-      }, 5000);
-    };
-
-    var stack = [];
-    if (options.sclang) {
-      var synthDefs = [];
-      for (let name in sounds) {
-        sounds[name].forEach((ss) => {
-          synthDefs.push(compileSynthDef(ss.defName, ss.source));
-        });
-      }
-      synthDefs.push(writeDefs);
-      stack.push(sc.dryads.interpreter(synthDefs, options));
-    } else {
-      stack.push((context) => {
-        return context.server.callAndResponse(sc.msg.defLoadDir(synthDefsDir));
+  static synthDefs() {
+    var synthDefs = [];
+    for (let name in sounds) {
+      sounds[name].forEach((ss) => {
+        synthDefs.push(compileSynthDef(ss.defName, ss.source));
       });
     }
+    return synthDefs;
+  }
 
-    // stream() spawns a synth everytime and event is pushed to this.soundStream
-    stack.push(sc.dryads.stream(this.soundStream));
+  output() {
+    this.soundStream = new rx.Subject();
 
-    this.sound = server([
-      group(stack)
-    ], options);
-
-    return this.sound();
+    return group([
+      // stream() spawns a synth everytime and event is pushed to this.soundStream
+      sc.dryads.stream(this.soundStream)
+    ]);
   }
 
   setSubject(stream, params) {

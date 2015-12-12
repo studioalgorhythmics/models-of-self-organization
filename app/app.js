@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const ms = new ModelSwitcher(document.body);
   ms.showIndex();
+  ms.play();
 
   ipc.on('select-model', (message) => {
     ms.selectModel(message);

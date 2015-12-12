@@ -155,6 +155,10 @@ export default class SegregationApp {
     this.sound.setSubject(multicast, this.model.params());
   }
 
+  static synthDefs() {
+    return BlipBlop.synthDefs();
+  }
+
   /**
    * Turn the sound engine on, waiting for events to spawn.
    */

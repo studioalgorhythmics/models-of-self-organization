@@ -123,6 +123,10 @@ export default class HomeostatApp {
     this.sound.setSubject(multicast, this.model.params());
   }
 
+  static synthDefs() {
+    return Sound.synthDefs();
+  }
+
   /**
    * Turn the sound engine on, waiting for events to spawn.
    */
