@@ -10,6 +10,9 @@ var d3 = require('d3');
 var rx = require('rx');
 var _ = require('lodash');
 
+const controlsWidth = 250;
+const margin = 15;
+
 /**
  * Application class that connects the model, view, sound and controls together.
  */
@@ -27,7 +30,8 @@ export default class SegregationApp {
     this.render(el);
 
     var ws = windowSize();
-    var width = Math.min(minSide(el), ws.width) - 20 - 250;
+    var width = Math.min(minSide(el), ws.width) -
+      controlsWidth - margin - margin;
     this.view = new SegregationView('#board svg', '#statistics svg', width);
 
     this.sound = new BlipBlop();
