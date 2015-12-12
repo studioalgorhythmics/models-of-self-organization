@@ -1,12 +1,11 @@
 var d3 = require('d3');
 var _ = require('lodash');
 
-const drawLinks = true;
-
 /**
  * d3 view for a Homeostat
  *
- * The model is hot-swappable. The view subscribes to the model.
+ * The model is hot-swappable. The view subscribes to the model,
+ * but does not get a direct reference to it.
  */
 export default class HomeostatView {
 
@@ -19,6 +18,10 @@ export default class HomeostatView {
     this.svg = this.element.append('g');
   }
 
+  /**
+   * @param {rx.Observeable} stream - This is actually a published multicasting stream that is consumed by both the view and the sound.
+   * @param {Object} params - The view doesn't have a direct reference to the model, rather it gets passed the relevant model params here.
+   */
   setSubject(stream, params) {
     if (this.subscription) {
       this.subscription.dispose();
@@ -40,6 +43,10 @@ export default class HomeostatView {
     this.initLayout();
   }
 
+  /**
+   * Initialize the nodes, links and force directed layout.
+   * Called whenever a new model is set.
+   */
   initLayout() {
     // force layout doesn't keep that from overlapping
     // switch to tidy tree
@@ -53,6 +60,8 @@ export default class HomeostatView {
     charge = -150;
     // charge gets smaller as numUnits increases
     // console.log('charge', charge);
+
+    this.drawLinks = this.modelParams.numUnits <= 20;
 
     var force = d3.layout.force();
     force
@@ -73,8 +82,8 @@ export default class HomeostatView {
         index: i,
         // still coming in from outer space
         // should start in middle
-        x: 0.5, // this.pxSize / 2,
-        y: 0.5 // this.pxSize / 2
+        x: this.pxSize / 2,
+        y: this.pxSize / 2
       });
     }
 
@@ -95,15 +104,17 @@ export default class HomeostatView {
 
     force.links(linksData);
 
-    if (drawLinks) {
-      // should be in a separate g below
-      var link = this.svg.selectAll('.link');
+    // should be in a separate g below
+    var link = this.svg.selectAll('.link');
+    if (this.drawLinks) {
       this.links = link.data(linksData);
-      this.links.exit().remove();
-      this.links.enter()
-        .append('line')
-        .attr('class', 'link');
+    } else {
+      this.links = link.data([]);
     }
+    this.links.exit().remove();
+    this.links.enter()
+      .append('line')
+      .attr('class', 'link');
 
     // join units to the force layout managed units
     this.units = unit.data(this.unitPositions);
@@ -121,7 +132,6 @@ export default class HomeostatView {
       .attr('width', unitSize)
       .attr('height', unitSize);
 
-
     force.on('tick', () => {
       // constrain them by the frame
       // and write values back to the unitPositions
@@ -129,7 +139,7 @@ export default class HomeostatView {
         .attr('x', (d) => d.x = this.clip(d.x))
         .attr('y', (d) => d.y = this.clip(d.y));
 
-      if (drawLinks) {
+      if (this.drawLinks) {
         this.updateLinks();
       }
     });
@@ -141,6 +151,14 @@ export default class HomeostatView {
     return Math.max(0, Math.min(this.pxSize - this.unitSize, v));
   }
 
+  /**
+   * Called each time the model produces a new state.
+   * event.units is the list of units.
+   * Each unit has .weights which is a list of the -1..1 weights used to scale
+   * the output of the other units.
+   *
+   * @param {Object} event - event.units
+   */
   update(event) {
     // color crossing through white:
     this.units
@@ -160,6 +178,11 @@ export default class HomeostatView {
     // }
   }
 
+  /**
+   * Update the lines showing between units showing the
+   * summing of the outputs. This can causes a lot of CPU
+   * if the number of nodes is high.
+   */
   updateLinks() {
     var getUnit = (index) => {
       return this.unitPositions[index];

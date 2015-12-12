@@ -3,20 +3,19 @@
 import SegregationModel from  './model';
 import SegregationView from  './view';
 import BlipBlop from './BlipBlop';
+import {minSide, windowSize} from '../utils';
 
 // external npm packages use require
 var d3 = require('d3');
 var rx = require('rx');
 var _ = require('lodash');
 
-const boardSize = 600;
-
 /**
  * Application class that connects the model, view, sound and controls together.
  */
-class SegregationApp {
+export default class SegregationApp {
 
-  constructor() {
+  constructor(el) {
     this.tolerance = 0.3;
     this.fill = 0.95;
     this.gridSize = 30;
@@ -25,7 +24,12 @@ class SegregationApp {
     this.speed = 250;
     this.dB = -10;
 
-    this.view = new SegregationView('#board svg', '#statistics', boardSize);
+    this.render(el);
+
+    var ws = windowSize();
+    var width = Math.min(minSide(el), ws.width) - 20 - 250;
+    this.view = new SegregationView('#board svg', '#statistics svg', width);
+
     this.sound = new BlipBlop();
     this.buildModel();
 
@@ -36,9 +40,34 @@ class SegregationApp {
       this.model.next();
       this.stepper = setTimeout(this.stepperFn, this.ms());
     };
+
+    this.controlsGui(el);
   }
 
-  controlsGui() {
+  render(el) {
+    var html = `
+    <div class="content segregation">
+      <h1>Schelling's Spatial Segregation Model</h1>
+      <div id="board"><svg></svg></div>
+      <div id="lower">
+        <div id="controls"></div>
+        <div id="statistics">
+          <div>
+            <span id="percentAlikeChart"><svg></svg></span>
+            <span id="percentAlikeReadout" class="readout"></span>
+          </div>
+          <div>
+            <span id="percentUnhappyChart"><svg></svg></span>
+            <span id="percentUnhappyReadout" class="readout"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    `;
+    el.innerHTML = html;
+  }
+
+  controlsGui(el) {
     this.gui = new window.dat.GUI({autoPlace: false});
     // #controls
     this.gui.add(this, 'tolerance', 0.0, 1.0, 0.01).name('Intolerance')
@@ -83,7 +112,8 @@ class SegregationApp {
     this.addSoundSelector();
     this.addSoundParamControls();
 
-    document.getElementById('controls').appendChild(this.gui.domElement);
+    document.getElementById('controls')
+      .appendChild(this.gui.domElement);
   }
 
   addSoundSelector() {
@@ -125,6 +155,10 @@ class SegregationApp {
     this.sound.setSubject(multicast, this.model.params());
   }
 
+  static synthDefs() {
+    return BlipBlop.synthDefs();
+  }
+
   /**
    * Turn the sound engine on, waiting for events to spawn.
    */
@@ -155,21 +189,14 @@ class SegregationApp {
     this.start();
   }
 
+  unload() {
+    this.stop();
+  }
+
   /**
    * Speed in milliseconds
    */
   ms() {
     return 60.0 / this.speed * 1000;
   }
-}
-
-export default function main() {
-
-  const app = new SegregationApp();
-  app.controlsGui();
-
-  app.buildModel();
-  // always playing, ready for events
-  app.play();
-  // app.start();
 }

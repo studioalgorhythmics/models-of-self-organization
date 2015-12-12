@@ -1,35 +1,43 @@
 @import url(https://fonts.googleapis.com/css?family=Open+Sans);
 
-html, body {
+@import "normalize.less";
+@import "skeleton.less";
+@line-height: 15px;
+
+html,
+body {
   width: 100%;
   height: 100%;
   margin: 0;
   padding: 0;
-  background-color: #808080;
 }
 
 body {
   display: flex;
-  justify-content: center;
-  // align-items: center;
   font-family: 'Open Sans', sans-serif;
 }
 
-a {
-  text-decoration: none;
+h1 {
+  color: #ddd;
+  font-size: 2em;
+  margin-left: 1rem
 }
 
-h4 {
-  font-family: 'Open Sans', sans-serif;
+.content {
+  width: 100%;
+  height: 100%;
 }
 
-.container {
+#controls {
+  float: right;
+  // width: 300px;
+}
+#board {
   text-align: center;
+  margin: 0 auto;
+  float: left;
 }
 
-.subtitle {
-  color: gray;
-}
 @import "segregation.less";
 @import "homeostat.less";
 @import "dat-gui.less";

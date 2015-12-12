@@ -3,6 +3,7 @@
 import Model from  './model';
 import View from  './view';
 import Sound from './sound';
+import {minSide, windowSize} from '../utils';
 
 // external npm packages use require
 var d3 = require('d3');
@@ -12,16 +13,22 @@ var _ = require('lodash');
 /**
  * Application class that connects the model, view, sound and controls together.
  */
-class HomeostatApp {
+export default class HomeostatApp {
 
-  constructor() {
+  constructor(el) {
     this.speed = 250;
     this.dB = -10;
 
     this.numUnits = 4;
     this.viscosity = 0.4;
 
-    this.view = new View('#board svg', 500);
+    this.render(el);
+    var ws = windowSize();
+    var width = Math.min(minSide(el), ws.width) - 250;
+    var height = Math.min(width, ws.height);
+    var pxSize = Math.min(width, height);
+    this.view = new View('#board svg', pxSize);
+
     this.sound = new Sound();
     this.buildModel();
 
@@ -33,10 +40,21 @@ class HomeostatApp {
       this.stepper = setTimeout(this.stepperFn, this.ms());
     };
 
-    this.controlsGui();
+    this.controlsGui(el);
   }
 
-  controlsGui() {
+  render(el) {
+    var html = `
+    <div class="content homeostat">
+      <h1>Ross Ashby's Homeostat</h1>
+      <div id="controls"></div>
+      <div id="board"><svg></svg></div>
+    </div>
+    `;
+    el.innerHTML = html;
+  }
+
+  controlsGui(el) {
     this.gui = new window.dat.GUI({autoPlace: false});
     this.gui.add(this, 'numUnits', 4, 40, 1).name('Number')
       .onChange((value) => {
@@ -105,6 +123,10 @@ class HomeostatApp {
     this.sound.setSubject(multicast, this.model.params());
   }
 
+  static synthDefs() {
+    return Sound.synthDefs();
+  }
+
   /**
    * Turn the sound engine on, waiting for events to spawn.
    */
@@ -135,19 +157,14 @@ class HomeostatApp {
     this.start();
   }
 
+  unload() {
+    this.stop();
+  }
+
   /**
    * Speed in milliseconds
    */
   ms() {
     return 60.0 / this.speed * 1000;
   }
-}
-
-export default function main() {
-
-  const app = new HomeostatApp();
-
-  // always playing, ready for events
-  app.play();
-  // app.start();
 }

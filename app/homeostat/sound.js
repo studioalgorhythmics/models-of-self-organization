@@ -8,19 +8,7 @@ var _ = require('lodash');
 
 const synth = sc.dryads.synth;
 const group = sc.dryads.group;
-const server = sc.dryads.server;
 const compileSynthDef = sc.dryads.compileSynthDef;
-
-const options = {
-  // dirname is returning as though it were top of project
-  // I don't want to go into build
-  // sclang: path.join(__dirname, 'vendor/supercollider/osx/sclang'),
-  scsynth: path.join(__dirname, 'vendor/supercollider/osx/scsynth'),
-  echo: true,
-  debug: true,
-  includePaths: [],
-  'sclang_conf': null
-};
 
 export default class Sound {
 
@@ -34,23 +22,21 @@ export default class Sound {
     this.initializeParams();
   }
 
-  play() {
-    this.soundStream = new rx.Subject();
-
+  static synthDefs() {
     var synthDefs = [];
     for (let name in sounds) {
       let ss = sounds[name];
       synthDefs.push(compileSynthDef(ss.defName, ss.source));
     }
+    return synthDefs;
+  }
 
-    this.sound = server([
-      group([
-        sc.dryads.interpreter(synthDefs, options),
-        sc.dryads.stream(this.soundStream)
-      ]),
-    ], options);
+  output() {
+    this.soundStream = new rx.Subject();
 
-    return this.sound();
+    return group([
+      sc.dryads.stream(this.soundStream)
+    ]);
   }
 
   setSubject(stream, params) {

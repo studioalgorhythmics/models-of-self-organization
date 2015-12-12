@@ -3,12 +3,17 @@
 
 // Modules which you authored in this project are intended to be
 // imported through new ES6 syntax.
-import main from './segregation/app';
+import ModelSwitcher from './model-switcher/app';
 
 // Node.js modules and those from npm
 // are required the same way as always.
 // var os = require('os');
 // var app = require('remote').require('app');
+
+// Electron 1.0 will look like this:
+// const ipc = require('electron').ipcRenderer;
+const ipc = require('ipc');
+
 // var jetpack = require('fs-jetpack').cwd(app.getAppPath());
 // Holy crap! This is browser window with HTML and stuff, but I can read
 // here files like it is node.js! Welcome to Electron world :)
@@ -19,6 +24,12 @@ import main from './segregation/app';
 
 document.addEventListener('DOMContentLoaded', function() {
 
-  main();
+  const ms = new ModelSwitcher(document.body);
+  ms.showIndex();
+  ms.play();
+
+  ipc.on('select-model', (message) => {
+    ms.selectModel(message);
+  });
 
 });
