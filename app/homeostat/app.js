@@ -11,7 +11,7 @@ var rx = require('rx');
 var _ = require('lodash');
 
 const controlsWidth = 250;
-const margin = 50;
+const margin = 15;
 
 /**
  * Application class that connects the model, view, sound and controls together.
@@ -27,7 +27,8 @@ export default class HomeostatApp {
 
     this.render(el);
     var ws = windowSize();
-    var width = Math.min(minSide(el), ws.width) - controlsWidth - margin;
+    var width = Math.min(minSide(el), ws.width) -
+      controlsWidth - margin - margin;
     var height = Math.min(width, ws.height);
     var pxSize = Math.min(width, height);
     this.view = new View('#board svg', pxSize);
