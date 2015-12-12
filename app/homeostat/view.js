@@ -4,7 +4,8 @@ var _ = require('lodash');
 /**
  * d3 view for a Homeostat
  *
- * The model is hot-swappable. The view subscribes to the model.
+ * The model is hot-swappable. The view subscribes to the model,
+ * but does not get a direct reference to it.
  */
 export default class HomeostatView {
 
@@ -17,6 +18,10 @@ export default class HomeostatView {
     this.svg = this.element.append('g');
   }
 
+  /**
+   * @param {rx.Observeable} stream - This is actually a published multicasting stream that is consumed by both the view and the sound.
+   * @param {Object} params - The view doesn't have a direct reference to the model, rather it gets passed the relevant model params here.
+   */
   setSubject(stream, params) {
     if (this.subscription) {
       this.subscription.dispose();
@@ -38,6 +43,10 @@ export default class HomeostatView {
     this.initLayout();
   }
 
+  /**
+   * Initialize the nodes, links and force directed layout.
+   * Called whenever a new model is set.
+   */
   initLayout() {
     // force layout doesn't keep that from overlapping
     // switch to tidy tree
@@ -73,8 +82,8 @@ export default class HomeostatView {
         index: i,
         // still coming in from outer space
         // should start in middle
-        x: 0.5, // this.pxSize / 2,
-        y: 0.5 // this.pxSize / 2
+        x: this.pxSize / 2,
+        y: this.pxSize / 2
       });
     }
 
@@ -142,6 +151,14 @@ export default class HomeostatView {
     return Math.max(0, Math.min(this.pxSize - this.unitSize, v));
   }
 
+  /**
+   * Called each time the model produces a new state.
+   * event.units is the list of units.
+   * Each unit has .weights which is a list of the -1..1 weights used to scale
+   * the output of the other units.
+   *
+   * @param {Object} event - event.units
+   */
   update(event) {
     // color crossing through white:
     this.units
@@ -161,6 +178,11 @@ export default class HomeostatView {
     // }
   }
 
+  /**
+   * Update the lines showing between units showing the
+   * summing of the outputs. This can causes a lot of CPU
+   * if the number of nodes is high.
+   */
   updateLinks() {
     var getUnit = (index) => {
       return this.unitPositions[index];

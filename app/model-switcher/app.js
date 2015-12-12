@@ -38,12 +38,22 @@ const options = _.defaults(env.options || {}, {
 
 const synthDefsDir = path.join(__dirname, 'synthdefs');
 
+/**
+ * Top level app that enables switching between different models
+ * and playing their sound through a shared supercollider output chain.
+ * Also compiles and loads any SynthDefs required by the models.
+ */
 export default class ModelSwitcher {
 
   constructor(el) {
     this.el = el;
+    this.dB = -25;
   }
 
+  /**
+   * Could show an index page here with thumbnails.
+   * under construction. Use the menu for now.
+   */
   showIndex() {
     // var vars = {
     //   models: models
@@ -53,6 +63,9 @@ export default class ModelSwitcher {
     // this.el.innerHTML = html;
   }
 
+  /**
+   * Switch to a model and display it.
+   */
   selectModel(name) {
     if (this.currentModel === name) {
       return;
@@ -67,12 +80,20 @@ export default class ModelSwitcher {
     }
   }
 
+  /**
+   * A list of `compileSynthDefs` dryads for each SynthDef
+   * that each model uses.
+   * This is used only when compiling synthdefs.
+   */
   synthDefs() {
     return segregation.synthDefs().concat(homeostat.synthDefs());
   }
 
   /**
-   * Boot supercollider
+   * Boot supercollider with a top level group.
+   * Compiles SynthDefs if sclang is available (in development)
+   * and writes those to disk.
+   * If no sclang (eg. a production release) then pre-compiled synthdefs are loaded.
    */
   play() {
     // each app produces a .sound object
@@ -84,7 +105,6 @@ export default class ModelSwitcher {
     // and there is no async tool for sequencing tasks like that yet.
     var writeDefs = (context) => {
       setTimeout(() => {
-        console.log('writing defs');
         context.lang.interpret(`
         SynthDescLib.default.synthDescs
           .keysValuesDo({ arg defName, synthDesc;
@@ -113,6 +133,9 @@ export default class ModelSwitcher {
     return this.master();
   }
 
+  /**
+   * Spawn a model's top level output dryad.
+   */
   spawnSound(dryad) {
     // need to store the previous and stop it.
     // right now every time you switch its leaving an empty group on the server.
