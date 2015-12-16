@@ -45,14 +45,17 @@ export default class SegregationView {
       .attr('height', String(this.pxSize) + 'px');
 
     if (this.modelParams) {
-      // retransform the cells
-      var cellWidth = this.pxSize / this.modelParams.size;
-      var radius = cellWidth * 0.45;
-
-      this.board.selectAll('circle')
-      .attr('r', radius)
-      .attr('transform', (d) => this.getTransformForCell(d, cellWidth));
+      this.positionCircles();
     }
+  }
+
+  positionCircles() {
+    var cellWidth = this.pxSize / this.modelParams.size;
+    var radius = cellWidth * 0.45;
+
+    this.board.selectAll('circle')
+    .attr('r', radius)
+    .attr('transform', (d) => this.getTransformForCell(d, cellWidth));
   }
   /**
    * Set a new model and subscribe to it, unsubscribing from any previously running model.
@@ -74,6 +77,8 @@ export default class SegregationView {
     this.percentAlikeChart.select('line')
       .attr('y1', this.vscale(params.tolerance * 100))
       .attr('y2', this.vscale(params.tolerance * 100));
+
+    this.positionCircles();
 
     if (stream) {
       // if I inherit from Observer then can subscribe myself
