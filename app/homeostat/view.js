@@ -5,10 +5,10 @@ var _ = require('lodash');
  * options labels for units
  */
 const LABELS = [
-  '1',
-  '2',
-  '3',
-  '4'
+  // '1',
+  // '2',
+  // '3',
+  // '4'
 ];
 
 /**
