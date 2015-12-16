@@ -147,7 +147,76 @@ const ripNoise = [
   }
 ];
 
+const pp = `
+  { arg out=0, freq=440, numharm=200, pan=0, timeScale=1.0, smooth=0.01, amp=1.0;
+    Out.ar(out,
+      Pan2.ar(
+        Blip.ar(
+          freq + (EnvGen.kr(Env.perc(0.1, smooth * 10)) * 40),
+          numharm,
+          amp) *
+            EnvGen.kr(Env.perc(0.01, smooth),
+              timeScale: timeScale,
+              doneAction: 2),
+        pan
+      )
+    );
+  }`;
+
+const pingPong = [
+  {
+    defName: 'ping',
+    source: pp,
+    // data mapped to synth args
+    args: (cell, x, y) => {
+      return {
+        freq: sc.map.midiToFreq(cell.coords.col + 30),
+        numharm: lin(2, 1000, y),
+        pan: -1
+      };
+    },
+    // extra args that are modulateable with sliders
+    params: {
+      timeScale: {
+        default: 1,
+        minval: 0.1,
+        maxval: 4.0
+      },
+      smooth: {
+        default: 0.4,
+        minval: 0.01,
+        maxval: 1.0
+      }
+    }
+  },
+
+  {
+    defName: 'pong',
+    source: pp,
+    args: (cell, x, y) => {
+      return {
+        freq: sc.map.midiToFreq(cell.coords.col + 30),
+        numharm: lin(2, 1000, y),
+        pan: 1
+      };
+    },
+    params: {
+      timeScale: {
+        default: 1,
+        minval: 0.1,
+        maxval: 4.0
+      },
+      smooth: {
+        default: 0.4,
+        minval: 0.01,
+        maxval: 1.0
+      }
+    }
+  }
+];
+
 export default {
   synth,
-  ripNoise
+  ripNoise,
+  pingPong
 };
