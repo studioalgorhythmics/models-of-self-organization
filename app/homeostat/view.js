@@ -51,15 +51,6 @@ export default class HomeostatView {
     var sqrtUnits = Math.sqrt(this.modelParams.numUnits);
     this.unitSize = (this.pxSize / sqrtUnits) * 0.5;
 
-    // update units positions by triggering force to restart
-    if (this.units) {
-      this.units
-        .attr('x', (d) => d.x = this.clip(d.x))
-        .attr('y', (d) => d.y = this.clip(d.y))
-        .attr('width', this.unitSize)
-        .attr('height', this.unitSize);
-    }
-
     // update force
     if (this.force) {
       this.force.size([this.pxSize, this.pxSize]);
@@ -73,8 +64,7 @@ export default class HomeostatView {
    */
   initLayout() {
     // force layout doesn't keep that from overlapping
-    // switch to tidy tree
-    // console.log('unitSize', unitSize);
+    // maybe switch to tidy tree
     this.setPxSize(this.pxSize);
 
     var linkDistance = this.unitSize * 5;
@@ -94,7 +84,7 @@ export default class HomeostatView {
       .charge(charge)  // node repulsion
       .linkDistance(linkDistance);
 
-    var unit = this.svg.selectAll('.unit');
+    var unit = this.svg.selectAll('.g-unit');
 
     // add units to force layout
     // https://github.com/mbostock/d3/wiki/Force-Layout#nodes
@@ -143,28 +133,24 @@ export default class HomeostatView {
     this.units = unit.data(this.unitPositions);
     this.units.exit().remove();
 
-    this.units
+    var ug = this.units
       .enter()
-        .append('rect')
-        .attr('class', 'unit');
+        .append('g')
+        .attr('class', 'g-unit');
+
+    ug.append('rect')
+      .attr('class', 'unit');
+    ug.append('line')
+      .attr('class', 'needle');
+    ug.append('text')
+      .attr('class', 'label');
+
     // .call(force.drag);
 
-    this.units
-      .attr('x', (d) => d.x = this.clip(d.x))
-      .attr('y', (d) => d.y = this.clip(d.y))
-      .attr('width', this.unitSize)
-      .attr('height', this.unitSize);
+    this.resizeUnits();
 
     this.force.on('tick', () => {
-      // constrain them by the frame
-      // and write values back to the unitPositions
-      this.units
-        .attr('x', (d) => {
-          d.x = this.clip(d.x);
-          return d.x;
-        })
-        .attr('y', (d) => d.y = this.clip(d.y));
-
+      this.resizeUnits();
       if (this.drawLinks) {
         this.updateLinks();
       }
@@ -177,6 +163,23 @@ export default class HomeostatView {
     return Math.max(0, Math.min(this.pxSize - this.unitSize, v));
   }
 
+  resizeUnits() {
+    this.units.attr('transform', (d) => {
+      // datum is a unitPosition object
+      const x = this.clip(d.x);
+      const y = this.clip(d.y);
+
+      // write clipped values back to the unitPosition
+      d.x = x;
+      d.y = y;
+
+      return 'translate(' + x + ' ' + y + ')';
+    });
+
+    this.units.selectAll('rect')
+      .attr('width', this.unitSize)
+      .attr('height', this.unitSize);
+  }
   /**
    * Called each time the model produces a new state.
    * event.units is the list of units.
@@ -187,21 +190,27 @@ export default class HomeostatView {
    */
   update(event) {
     // color crossing through white:
-    this.units
+    this.units.selectAll('rect')
       .transition()
-      .style('fill', (d, i) => {
-        var output = event.units[i].output;
+      .style('fill', (d) => {
+        var output = event.units[d.index].output;
         var level = 1 - Math.abs(output);
         var color = d3.hsl(output > 0 ? 20 : 333, level, level);
         return color.toString();
       });
 
-    // output level as text or needle
+    const xScale = d3.scale.linear();
+    xScale.domain([-1, 1]).range([0, this.unitSize]);
 
-    // positions are updated by tick
-    // if (drawLinks) {
-    //   this.updateLinks();
-    // }
+    var needles = this.units.selectAll('.needle');
+    needles
+      .transition()
+      .attr({
+        x1: (d, i) => xScale(event.units[d.index].output),
+        x2: (d, i) => xScale(event.units[d.index].output),
+        y1: 0,
+        y2: this.unitSize
+      });
   }
 
   /**
