@@ -64,7 +64,9 @@ export default class ModelSwitcher {
   }
 
   windowDidResize() {
-    this.app.windowDidResize();
+    if (this.app) {
+      this.app.windowDidResize();
+    }
   }
 
   /**
