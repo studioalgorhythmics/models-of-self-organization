@@ -2,6 +2,16 @@ var d3 = require('d3');
 var _ = require('lodash');
 
 /**
+ * options labels for units
+ */
+const LABELS = [
+  '1',
+  '2',
+  '3',
+  '4'
+];
+
+/**
  * d3 view for a Homeostat
  *
  * The model is hot-swappable. The view subscribes to the model,
@@ -139,11 +149,22 @@ export default class HomeostatView {
         .attr('class', 'g-unit');
 
     ug.append('rect')
-      .attr('class', 'unit');
+      .attr({
+        class: 'unit',
+        width: this.unitSize,
+        height: this.unitSize
+      });
+
     ug.append('line')
       .attr('class', 'needle');
     ug.append('text')
-      .attr('class', 'label');
+      .attr('class', 'label')
+      .text((d, i) => LABELS[i] || '')
+      .attr({
+        x: this.unitSize / 2 - 10,
+        y: this.unitSize / 2,
+        dy: '.5em'
+      });
 
     // .call(force.drag);
 
