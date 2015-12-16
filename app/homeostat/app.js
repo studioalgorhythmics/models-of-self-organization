@@ -130,7 +130,7 @@ export default class HomeostatApp {
     this.model = new Model(this.numUnits, this.viscosity);
 
     var multicast = this.model.publish();
-    this.view.setSubject(multicast, this.model.params());
+    this.view.setSubject(multicast, this.model);
     multicast.connect();
     this.model.next();
     this.sound.setSubject(multicast, this.model.params());

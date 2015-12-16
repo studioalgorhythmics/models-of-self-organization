@@ -28,14 +28,15 @@ export default class HomeostatView {
 
   /**
    * @param {rx.Observeable} stream - This is actually a published multicasting stream that is consumed by both the view and the sound.
-   * @param {Object} params - The view doesn't have a direct reference to the model, rather it gets passed the relevant model params here.
+   * @param {Object} model -
    */
-  setSubject(stream, params) {
+  setSubject(stream, model) {
     if (this.subscription) {
       this.subscription.dispose();
     }
 
-    this.modelParams = params;
+    this.model = model;
+    this.modelParams = model.params();
 
     if (stream) {
       this.subscription = stream.subscribe((event) => {
@@ -146,7 +147,10 @@ export default class HomeostatView {
     var ug = this.units
       .enter()
         .append('g')
-        .attr('class', 'g-unit');
+        .attr('class', 'g-unit')
+        .on('click', (d, i) => {
+          this.model.randomizeOutput(d.index);
+        });
 
     ug.append('rect')
       .attr({
@@ -201,6 +205,7 @@ export default class HomeostatView {
       .attr('width', this.unitSize)
       .attr('height', this.unitSize);
   }
+
   /**
    * Called each time the model produces a new state.
    * event.units is the list of units.

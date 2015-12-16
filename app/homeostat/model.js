@@ -76,6 +76,11 @@ class Unit {
   isClipping() {
     return Math.abs(this.output) >= (1.0 - THRESHOLD);
   }
+
+  randomizeOutput() {
+    this.output = rnd();
+    console.log('randomized', this.output);
+  }
 }
 
 /**
@@ -122,5 +127,9 @@ export default class Homeostat extends rx.Subject {
       numUnits: this.numUnits,
       viscosity: this.viscosity
     };
+  }
+
+  randomizeOutput(index) {
+    this.units[index].randomizeOutput();
   }
 }
