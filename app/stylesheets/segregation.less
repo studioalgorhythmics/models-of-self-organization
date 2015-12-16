@@ -1,5 +1,16 @@
 
+@import url(https://fonts.googleapis.com/css?family=Lora);
+
 .segregation {
+  width: 100%;
+  h2 {
+    font-size: 3.2rem;
+    text-align: center;
+    margin-top: 3rem;
+    padding-bottom: 4rem;
+    color: #ADB4BB;
+    font-family: Lora;
+  }
   .vacant {
     fill: transparent;
   }
@@ -36,5 +47,28 @@
   }
   .inputReadout {
     color: #666;
+  }
+
+  .description {
+    padding-top: 2rem;
+    font-size: 1.5em;
+
+    i {
+      width: 20px;
+      height: 20px;
+      display: inline-block;
+      border-radius: 100px;  // round
+    }
+
+    .group1 {
+      i {
+        background-color: @segregation-one;
+      }
+    }
+    .group2 {
+      i {
+        background-color: @segregation-two;
+      }
+    }
   }
 }

@@ -36,4 +36,6 @@ document.addEventListener('DOMContentLoaded', function() {
     ms.windowDidResize();
   };
 
+  ms.selectModel('segregation');
+
 });

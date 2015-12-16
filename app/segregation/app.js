@@ -60,19 +60,26 @@ export default class SegregationApp {
 
   render(el) {
     var html = `
-    <div class="content segregation">
+    <div class="segregation">
       <h1>Schelling's Spatial Segregation Model</h1>
-      <div id="board"><svg></svg></div>
-      <div id="lower">
-        <div id="controls"></div>
-        <div id="statistics">
-          <div>
-            <span id="percentAlikeChart"><svg></svg></span>
-            <span id="percentAlikeReadout" class="readout"></span>
+      <h2>Verteilung Yak-Wurst-Esser / Pastinaken</h2>
+      <div class="content">
+        <div id="board"><svg></svg></div>
+        <div id="lower">
+          <div id="controls"></div>
+          <div class="description">
+            <div class="group1"><i class="icon-circle"></i> Yak-Wurst Esser</div>
+            <div class="group2"><i class="icon-circle"></i> Pastinaken</div>
           </div>
-          <div>
-            <span id="percentUnhappyChart"><svg></svg></span>
-            <span id="percentUnhappyReadout" class="readout"></span>
+          <div id="statistics">
+            <div>
+              <span id="percentAlikeChart"><svg></svg></span>
+              <span id="percentAlikeReadout" class="readout"></span>
+            </div>
+            <div>
+              <span id="percentUnhappyChart"><svg></svg></span>
+              <span id="percentUnhappyReadout" class="readout"></span>
+            </div>
           </div>
         </div>
       </div>
