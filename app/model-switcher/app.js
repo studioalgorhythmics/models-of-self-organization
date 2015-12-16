@@ -107,7 +107,7 @@ export default class ModelSwitcher {
 
     // have to wait until after the others are done
     // and there is no async tool for sequencing tasks like that yet.
-    var writeDefs = (context) => {
+    const writeDefs = (context) => {
       setTimeout(() => {
         context.lang.interpret(`
         SynthDescLib.default.synthDescs
@@ -116,6 +116,19 @@ export default class ModelSwitcher {
           });`);
       }, 5000);
     };
+
+    const master = compileSynthDef('master', `
+      { arg out=0;
+        var in, lim;
+        var threshold=0.5, slope=0.5, clampTime=0.1, relaxTime=0.3;
+        in = In.ar(out, 2);
+        lim = Compressor.ar()
+        lim = Compander.ar(in, Mono(in).max(0.0001),
+          threshold, 1.0 ,slope, clampTime, relaxTime);
+        lim = Limiter.ar(in, 0.99);
+        ReplaceOut.ar(out, lim);
+      }
+    `);
 
     var stack = [];
     if (options.sclang) {
@@ -131,7 +144,8 @@ export default class ModelSwitcher {
     stack.push(sc.dryads.stream(this.soundStream));
 
     this.master = server([
-      group(stack)
+      group(stack),
+      synth(master, {out: 0})
     ], options);
 
     return this.master();
