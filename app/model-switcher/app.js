@@ -124,28 +124,29 @@ export default class ModelSwitcher {
         var in, lim;
         var threshold=0.5, slope=0.5, clampTime=0.1, relaxTime=0.3;
         in = In.ar(out, 2);
-        lim = Compander.ar(in, Mono(in).max(0.0001), threshold, 1.0 ,slope, clampTime, relaxTime);
+        lim = Compander.ar(in, in.first.max(0.0001), threshold, 1.0 ,slope, clampTime, relaxTime);
         lim = Limiter.ar(in, 0.99);
         ReplaceOut.ar(out, lim);
       }
     `);
 
-    var stack = [];
+    const loadDefs = (context) => {
+      return context.server.callAndResponse(sc.msg.defLoadDir(synthDefsDir));
+    };
+
+    var stack = [loadDefs];
     if (options.sclang) {
       var interpretTogether = this.synthDefs();
+      interpretTogether.push(master);
       interpretTogether.push(writeDefs);
       stack.push(sc.dryads.interpreter(interpretTogether, options));
-    } else {
-      stack.push((context) => {
-        return context.server.callAndResponse(sc.msg.defLoadDir(synthDefsDir));
-      });
     }
 
     stack.push(sc.dryads.stream(this.soundStream));
 
     this.master = server([
       group(stack),
-      synth(master, {out: 0})
+      synth('master', {out: 0})
     ], options);
 
     return this.master();
