@@ -26,9 +26,7 @@ export default class SegregationView {
   constructor(boardEl, statisticsEl, pxSize) {
 
     this.pxSize = Number(pxSize);
-    this.element = d3.select(boardEl)
-                      .attr('width', String(this.pxSize) + 'px')
-                      .attr('height', String(this.pxSize) + 'px');
+    this.element = d3.select(boardEl);
 
     this.meanPercentAlike = [];
     this.percentUnhappy = [];
@@ -37,8 +35,25 @@ export default class SegregationView {
 
     // build the display board
     this.board = this.element.append('g');
+    this.setPxSize(this.pxSize);
   }
 
+  setPxSize(pxSize) {
+    this.pxSize = pxSize;
+    this.element
+      .attr('width', String(this.pxSize) + 'px')
+      .attr('height', String(this.pxSize) + 'px');
+
+    if (this.modelParams) {
+      // retransform the cells
+      var cellWidth = this.pxSize / this.modelParams.size;
+      var radius = cellWidth * 0.45;
+
+      this.board.selectAll('circle')
+      .attr('r', radius)
+      .attr('transform', (d) => this.getTransformForCell(d, cellWidth));
+    }
+  }
   /**
    * Set a new model and subscribe to it, unsubscribing from any previously running model.
    *
@@ -190,14 +205,13 @@ export default class SegregationView {
 
     circles.exit().remove();
     circles.enter().append('circle')
-      .attr('title', (d) => d.coords.row + ', ' + d.coords.col);
+      .attr('r', radius)
+      .attr('transform', (d) => this.getTransformForCell(d, cellWidth));
 
     circles
-      .attr('r', radius)
       .attr('class', (d) => {
         return (d.group || 'vacant') + ' ' + (d.unhappy  ? 'unhappy' : '');
-      })
-      .attr('transform', (d) => this.getTransformForCell(d, cellWidth));
+      });
 
     // push to history stack
     this.meanPercentAlike.push(event.meanPercentAlike);

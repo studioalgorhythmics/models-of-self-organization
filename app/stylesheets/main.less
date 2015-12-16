@@ -19,6 +19,7 @@ body {
   font-family: 'Open Sans', sans-serif;
   background: @bg;
   color: @text;
+  overflow: hidden;
 }
 
 h1 {
@@ -30,15 +31,15 @@ h1 {
 .content {
   width: 100%;
   height: 100%;
+  display: flex;
 }
 
 #controls {
-  float: right;
   // width: 300px;
 }
 #board {
+  flex: 1;
   text-align: center;
-  float: left;
   margin: 0 auto;
   svg {
     margin: 0 15px;

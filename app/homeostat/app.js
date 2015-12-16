@@ -26,12 +26,7 @@ export default class HomeostatApp {
     this.viscosity = 0.4;
 
     this.render(el);
-    var ws = windowSize();
-    var width = Math.min(minSide(el), ws.width) -
-      controlsWidth - margin - margin;
-    var height = Math.min(width, ws.height);
-    var pxSize = Math.min(width, height);
-    this.view = new View('#board svg', pxSize);
+    this.view = new View('#board svg', this.calcPxSize());
 
     this.sound = new Sound();
     this.buildModel();
@@ -47,15 +42,29 @@ export default class HomeostatApp {
     this.controlsGui(el);
   }
 
+  windowDidResize() {
+    this.view.setPxSize(this.calcPxSize());
+  }
+
+  calcPxSize() {
+    var ws = windowSize();
+    var width = Math.min(minSide(this.el), ws.width) -
+      controlsWidth - margin - margin;
+    var height = Math.min(width, ws.height);
+    var pxSize = Math.min(width, height);
+    return pxSize;
+  }
+
   render(el) {
     var html = `
     <div class="content homeostat">
       <h1>Ross Ashby's Homeostat</h1>
-      <div id="controls"></div>
       <div id="board"><svg></svg></div>
+      <div id="controls"></div>
     </div>
     `;
     el.innerHTML = html;
+    this.el = el;
   }
 
   controlsGui(el) {

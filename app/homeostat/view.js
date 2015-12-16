@@ -11,9 +11,7 @@ export default class HomeostatView {
 
   constructor(boardEl, pxSize) {
     this.pxSize = Number(pxSize);
-    this.element = d3.select(boardEl)
-                      .attr('width', String(this.pxSize) + 'px')
-                      .attr('height', String(this.pxSize) + 'px');
+    this.element = d3.select(boardEl);
 
     this.svg = this.element.append('g');
   }
@@ -43,6 +41,32 @@ export default class HomeostatView {
     this.initLayout();
   }
 
+  setPxSize(pxSize) {
+    this.pxSize = pxSize;
+
+    this.element
+      .attr('width', String(this.pxSize) + 'px')
+      .attr('height', String(this.pxSize) + 'px');
+
+    var sqrtUnits = Math.sqrt(this.modelParams.numUnits);
+    this.unitSize = (this.pxSize / sqrtUnits) * 0.5;
+
+    // update units positions by triggering force to restart
+    if (this.units) {
+      this.units
+        .attr('x', (d) => d.x = this.clip(d.x))
+        .attr('y', (d) => d.y = this.clip(d.y))
+        .attr('width', this.unitSize)
+        .attr('height', this.unitSize);
+    }
+
+    // update force
+    if (this.force) {
+      this.force.size([this.pxSize, this.pxSize]);
+      this.force.start();
+    }
+  }
+
   /**
    * Initialize the nodes, links and force directed layout.
    * Called whenever a new model is set.
@@ -50,21 +74,20 @@ export default class HomeostatView {
   initLayout() {
     // force layout doesn't keep that from overlapping
     // switch to tidy tree
-    var sqrtUnits = Math.sqrt(this.modelParams.numUnits);
-    var unitSize = (this.pxSize / sqrtUnits) * 0.5;
-    this.unitSize = unitSize;
     // console.log('unitSize', unitSize);
-    var linkDistance = unitSize * 5;
+    this.setPxSize(this.pxSize);
+
+    var linkDistance = this.unitSize * 5;
     // console.log('linkDistance', linkDistance);
-    var charge = (0 - unitSize) * 4;
+    var charge = (0 - this.unitSize) * 4;
     charge = -150;
     // charge gets smaller as numUnits increases
     // console.log('charge', charge);
 
     this.drawLinks = this.modelParams.numUnits <= 20;
 
-    var force = d3.layout.force();
-    force
+    this.force = d3.layout.force();
+    this.force
       .size([this.pxSize, this.pxSize])
       .gravity(0.6)
       .friction(0.5)
@@ -87,7 +110,7 @@ export default class HomeostatView {
       });
     }
 
-    force.nodes(this.unitPositions);
+    this.force.nodes(this.unitPositions);
 
     // better to use a node tree ?
     var linksData =  [];
@@ -102,7 +125,7 @@ export default class HomeostatView {
       });
     });
 
-    force.links(linksData);
+    this.force.links(linksData);
 
     // should be in a separate g below
     var link = this.svg.selectAll('.link');
@@ -129,14 +152,17 @@ export default class HomeostatView {
     this.units
       .attr('x', (d) => d.x = this.clip(d.x))
       .attr('y', (d) => d.y = this.clip(d.y))
-      .attr('width', unitSize)
-      .attr('height', unitSize);
+      .attr('width', this.unitSize)
+      .attr('height', this.unitSize);
 
-    force.on('tick', () => {
+    this.force.on('tick', () => {
       // constrain them by the frame
       // and write values back to the unitPositions
       this.units
-        .attr('x', (d) => d.x = this.clip(d.x))
+        .attr('x', (d) => {
+          d.x = this.clip(d.x);
+          return d.x;
+        })
         .attr('y', (d) => d.y = this.clip(d.y));
 
       if (this.drawLinks) {
@@ -144,7 +170,7 @@ export default class HomeostatView {
       }
     });
 
-    force.start();
+    this.setPxSize(this.pxSize);
   }
 
   clip(v) {

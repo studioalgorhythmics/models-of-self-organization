@@ -10,7 +10,7 @@ var d3 = require('d3');
 var rx = require('rx');
 var _ = require('lodash');
 
-const controlsWidth = 250;
+const controlsWidth = 300;
 const margin = 15;
 
 /**
@@ -29,10 +29,8 @@ export default class SegregationApp {
 
     this.render(el);
 
-    var ws = windowSize();
-    var width = Math.min(minSide(el), ws.width) -
-      controlsWidth - margin - margin;
-    this.view = new SegregationView('#board svg', '#statistics svg', width);
+    this.view = new SegregationView('#board svg', '#statistics svg',
+      this.calcPxSize());
 
     this.sound = new BlipBlop();
     this.buildModel();
@@ -46,6 +44,17 @@ export default class SegregationApp {
     };
 
     this.controlsGui(el);
+  }
+
+  windowDidResize() {
+    this.view.setPxSize(this.calcPxSize());
+  }
+
+  calcPxSize() {
+    var ws = windowSize();
+    var width = Math.min(minSide(this.el), ws.width) -
+      controlsWidth - margin - margin;
+    return width;
   }
 
   render(el) {
@@ -69,6 +78,7 @@ export default class SegregationApp {
     </div>
     `;
     el.innerHTML = html;
+    this.el = el;
   }
 
   controlsGui(el) {

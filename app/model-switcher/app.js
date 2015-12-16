@@ -63,6 +63,10 @@ export default class ModelSwitcher {
     // this.el.innerHTML = html;
   }
 
+  windowDidResize() {
+    this.app.windowDidResize();
+  }
+
   /**
    * Switch to a model and display it.
    */

@@ -32,4 +32,8 @@ document.addEventListener('DOMContentLoaded', function() {
     ms.selectModel(message);
   });
 
+  window.onresize = () => {
+    ms.windowDidResize();
+  };
+
 });
