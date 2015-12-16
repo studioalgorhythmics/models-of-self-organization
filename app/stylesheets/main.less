@@ -4,6 +4,8 @@
 @import "skeleton.less";
 @line-height: 15px;
 
+@import "dark-theme.less";
+
 html,
 body {
   width: 100%;
@@ -15,10 +17,12 @@ body {
 body {
   display: flex;
   font-family: 'Open Sans', sans-serif;
+  background: @bg;
+  color: @text;
 }
 
 h1 {
-  color: #ddd;
+  color: @light-text;
   font-size: 2em;
   margin-left: 1rem
 }

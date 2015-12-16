@@ -1,30 +1,39 @@
 
 #controls {
+  // required variables:
+  // @text: #333;
+  // @lines: #eee;
+  // @slider-fg: #2fa1d6;
+  // @slider-bg: #eee;
+
   .dg {
     text-shadow: none;
-    color: #333;
+    color: @text;
 
     li:not(.folder) {
-      background: inherit;
-      border-bottom: 1px solid #eee;
+      background: @controls-bg;
+      border-bottom: 1px solid @lines;
     }
     // fix dat.gui sliders positioning
     .c {
       position: relative;
       .slider {
-        background: #eee;
+        background: @slider-bg;
         position: absolute;
         width: 65%;
         padding: 0;
+      }
+      .slider-fg {
+        background: @slider-fg;
       }
       input[type=text] {
         background: inherit;
       }
       .button {
         height: 22px;
-        border: 1px solid #aaacb4;
+        border: 1px solid @lines;
         border-radius: 3px;
-        margin: 1px 0;
+        margin: 2px 0;
         padding: 0;
       }
     }
@@ -34,7 +43,7 @@
       border-left: 0;
 
       input[type=text] {
-        color: #333;
+        color: @text;
       }
     }
   }
@@ -42,7 +51,7 @@
   .dg.main {
     .close-button {
       display: none;
-      background: inherit;
+      background: @controls-bg;
     }
   }
 
