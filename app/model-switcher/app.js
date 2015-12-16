@@ -122,9 +122,7 @@ export default class ModelSwitcher {
         var in, lim;
         var threshold=0.5, slope=0.5, clampTime=0.1, relaxTime=0.3;
         in = In.ar(out, 2);
-        lim = Compressor.ar()
-        lim = Compander.ar(in, Mono(in).max(0.0001),
-          threshold, 1.0 ,slope, clampTime, relaxTime);
+        lim = Compander.ar(in, Mono(in).max(0.0001), threshold, 1.0 ,slope, clampTime, relaxTime);
         lim = Limiter.ar(in, 0.99);
         ReplaceOut.ar(out, lim);
       }

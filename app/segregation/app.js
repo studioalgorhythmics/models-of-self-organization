@@ -33,6 +33,7 @@ export default class SegregationApp {
       this.calcPxSize());
 
     this.sound = new BlipBlop();
+    this.sound.dB = this.dB;
     this.buildModel();
 
     this.isPlaying = false;
@@ -113,7 +114,7 @@ export default class SegregationApp {
         }
       });
 
-    this.gui.add(this, 'speed', 10, 10000);
+    this.gui.add(this, 'speed', 10, 1000);
     this.gui.add(this, 'dB', -130.0, 0.0).onChange((value) => {
       this.sound.dB = value;
     });
@@ -150,6 +151,7 @@ export default class SegregationApp {
     this.soundParams = [];
     _.each(this.sound.paramSpecs(), (spec, name) => {
       var c = this.gui.add(this.sound.params, name, spec.minval, spec.maxval);
+      this[name] = spec.default;
       this.soundParams.push(c);
     });
   }

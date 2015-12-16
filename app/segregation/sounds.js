@@ -63,7 +63,7 @@ const synth = [
     },
     params: {
       rq: {
-        default: 0.3,
+        default: 0.9,
         minval: 0.05,
         maxval: 1.0
       },
