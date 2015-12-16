@@ -1,4 +1,5 @@
 build
+releases
 node_modules
 app/spec.js
 npm-debug.log
