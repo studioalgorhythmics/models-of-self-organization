@@ -131,7 +131,9 @@ export default class SegregationApp {
     this.gui.add(this, 'start');
     this.gui.add(this, 'stop');
     this.gui.add(this, 'restart');
-    this.gui.add(this, 'randomize');
+    this.gui.add(this, 'randomize').onChange(_.debounce(() => {
+      this._randomize();
+    }, 500));
 
     this.addSoundSelector();
     this.addSoundParamControls();
@@ -180,7 +182,9 @@ export default class SegregationApp {
     this.sound.setSubject(multicast, this.model.params());
   }
 
-  randomize() {
+  randomize() {}
+
+  _randomize() {
     this.stop();
     this.tolerance = rnd(0.1, 0.9);
     this.fill = rnd(0.25, 0.95);
