@@ -62,14 +62,14 @@ export default class SegregationApp {
     var html = `
     <div class="segregation">
       <h1>Schelling's Spatial Segregation Model</h1>
-      <h2>Verteilung Yak-Wurst-Esser / Pastinaken</h2>
+      <h2>Verteilung Yak-Wurst-Esser / Pastinaken Esser</h2>
       <div class="content">
         <div id="board"><svg></svg></div>
         <div id="lower">
           <div id="controls"></div>
           <div class="description">
             <div class="group1"><i class="icon-circle"></i> Yak-Wurst Esser</div>
-            <div class="group2"><i class="icon-circle"></i> Pastinaken</div>
+            <div class="group2"><i class="icon-circle"></i> Pastinaken Esser</div>
           </div>
           <div id="statistics">
             <div>
