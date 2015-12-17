@@ -4,6 +4,18 @@ function lin(minval, maxval, val) {
   return sc.map.linToLin(0, 1, minval, maxval, val);
 }
 
+function wrap(minval, maxval, val) {
+  if (val > maxval) {
+    return minval + (val % (maxval - minval));
+  }
+  if (val < minval) {
+    return minval;
+    // return minval + (val % (maxval - minval));
+    // return wrap(minval, maxval, maxval - (minval - val));
+  }
+  return val;
+}
+
 const synth = [
   {
     defName: 'blip',
@@ -23,7 +35,7 @@ const synth = [
     // data mapped to synth args
     args: (cell, x, y) => {
       return {
-        freq: sc.map.midiToFreq(cell.coords.col * 2 + 30),
+        freq: wrap(100, 12000, sc.map.midiToFreq(cell.coords.col * 2 + 30)),
         numharm: lin(0, 50, y),
         pan: lin(-1, 1, x)
       };
@@ -60,8 +72,8 @@ const synth = [
       }`,
     args: (cell, x, y) => {
       return {
-        freq: sc.map.midiToFreq(cell.coords.col * 2 + 30),
-        ffreq: sc.map.midiToFreq(cell.coords.row * 3 + 30),
+        freq: wrap(100, 12000, sc.map.midiToFreq(cell.coords.col * 2 + 30)),
+        ffreq: wrap(40, 12000, sc.map.midiToFreq(cell.coords.col * 3 + 30)),
         rq: lin(0.05, 1.0, x),
         pan: lin(-1, 1, x)
       };
@@ -146,7 +158,7 @@ const ripNoise = [
       }`,
     args: (cell, x, y) => {
       return {
-        freq: sc.map.midiToFreq(cell.coords.row * 3 + 40),
+        freq: wrap(100, 12000, sc.map.midiToFreq(cell.coords.col * 3 + 30)),
         feedback: lin(0.0, 4.0, x),
         rq: lin(0.05, 1.0, x),
         pan: lin(-1, 1, x)
@@ -174,7 +186,7 @@ const pp = `
         Blip.ar(
           freq + (EnvGen.kr(Env.perc(0.1, smooth * 10)) * 40),
           numharm,
-          amp * 1.5) *
+          amp * 2.0) *
             EnvGen.kr(Env.perc(0.01, smooth),
               timeScale: timeScale,
               doneAction: 2),
@@ -190,7 +202,7 @@ const pingPong = [
     // data mapped to synth args
     args: (cell, x, y) => {
       return {
-        freq: sc.map.midiToFreq(cell.coords.col + 30),
+        freq: wrap(100, 12000, sc.map.midiToFreq(cell.coords.col + 30)),
         numharm: lin(2, 1000, y),
         pan: -1
       };
@@ -215,7 +227,7 @@ const pingPong = [
     source: pp,
     args: (cell, x, y) => {
       return {
-        freq: sc.map.midiToFreq(cell.coords.col + 30),
+        freq: wrap(100, 12000, sc.map.midiToFreq(cell.coords.col + 30)),
         numharm: lin(2, 1000, y),
         pan: 1
       };

@@ -1,5 +1,6 @@
 
 import sounds from './sounds';
+import {rnd} from '../utils';
 
 var sc = require('supercolliderjs');
 var rx = require('rx');
@@ -92,5 +93,12 @@ export default class BlipBlop {
       });
     });
     return specs;
+  }
+
+  randomize() {
+    this.soundSet = _.shuffle(_.keys(sounds))[0];
+    this.params = _.mapValues(
+      this.paramSpecs(),
+      (spec, name) => rnd(spec.minval, spec.maxval));
   }
 }

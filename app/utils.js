@@ -12,3 +12,7 @@ export function windowSize() {
   var y = w.innerHeight || e.clientHeight || g.clientHeight;
   return {width: x, height: y};
 }
+
+export function rnd(min, max) {
+  return Math.random() * (max - min) + min;
+}

@@ -3,7 +3,7 @@
 import SegregationModel from  './model';
 import SegregationView from  './view';
 import BlipBlop from './BlipBlop';
-import {minSide, windowSize} from '../utils';
+import {minSide, windowSize, rnd} from '../utils';
 
 // external npm packages use require
 var d3 = require('d3');
@@ -92,7 +92,8 @@ export default class SegregationApp {
   controlsGui(el) {
     this.gui = new window.dat.GUI({autoPlace: false});
     // #controls
-    this.gui.add(this, 'tolerance', 0.0, 1.0, 0.01).name('Intolerance')
+    this.gui.add(this, 'tolerance', 0.0, 1.0, 0.01)
+      .name('Intolerance')
       .onChange((value) => {
         this.buildModel();
         if (this.isPlaying) {
@@ -130,6 +131,7 @@ export default class SegregationApp {
     this.gui.add(this, 'start');
     this.gui.add(this, 'stop');
     this.gui.add(this, 'restart');
+    this.gui.add(this, 'randomize');
 
     this.addSoundSelector();
     this.addSoundParamControls();
@@ -158,7 +160,7 @@ export default class SegregationApp {
     this.soundParams = [];
     _.each(this.sound.paramSpecs(), (spec, name) => {
       var c = this.gui.add(this.sound.params, name, spec.minval, spec.maxval);
-      this[name] = spec.default;
+      this[name] = this.sound.params[name] || spec.default;
       this.soundParams.push(c);
     });
   }
@@ -176,6 +178,24 @@ export default class SegregationApp {
     multicast.connect();
     this.model.next();
     this.sound.setSubject(multicast, this.model.params());
+  }
+
+  randomize() {
+    this.stop();
+    this.tolerance = rnd(0.1, 0.9);
+    this.fill = rnd(0.25, 0.95);
+    this.gridSize = Number.parseInt(rnd(10, 100));
+    this.balance = Number.parseInt(rnd(10, 90));
+    this.speed = rnd(20, 1000);
+
+    this.sound.randomize();
+    this.addSoundParamControls();
+
+    for (let i in this.gui.__controllers) {
+      this.gui.__controllers[i].updateDisplay();
+    }
+
+    this.restart();
   }
 
   static synthDefs() {
