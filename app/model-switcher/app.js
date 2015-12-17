@@ -143,10 +143,20 @@ export default class ModelSwitcher {
     }
 
     stack.push(sc.dryads.stream(this.soundStream));
+    // with this version of the dryads it isn't possible
+    // to wait for /d_loadDir before spawning.
+    // stack.push(group([synth('master', {out: 0})]));
+    // So just spawn it 2secs later. Will fix when new supercollider.js is out
+    stack.push((context) => {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          synth('master', {out: 0})(context).then(resolve);
+        }, 2000);
+      });
+    });
 
     this.master = server([
-      group(stack),
-      synth('master', {out: 0})
+      group(stack)
     ], options);
 
     return this.master();
