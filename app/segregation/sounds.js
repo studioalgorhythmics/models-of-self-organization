@@ -234,7 +234,7 @@ const pingPong = [
     },
     params: {
       timeScale: {
-        default: 1,
+        default: 0.4,
         minval: 0.1,
         maxval: 4.0
       },

@@ -21,10 +21,10 @@ export default class SegregationApp {
   constructor(el) {
     this.tolerance = 0.3;
     this.fill = 0.95;
-    this.gridSize = 30;
+    this.gridSize = 22;
     this.balance = 50.0;
 
-    this.speed = 250;
+    this.speed = 2000;
     this.dB = -10;
 
     this.render(el);

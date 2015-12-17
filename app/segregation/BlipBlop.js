@@ -23,7 +23,7 @@ export default class BlipBlop {
       this.setSubject(stream, params);
     }
     this.dB = -25;
-    this.soundSet = _.shuffle(_.keys(sounds))[0];
+    this.soundSet = 'pingPong';  // _.shuffle(_.keys(sounds))[0];
     this.initializeParams();
   }
 
