@@ -32,6 +32,14 @@ document.addEventListener('DOMContentLoaded', function() {
     ms.selectModel(message);
   });
 
+  ipc.on('play', () => {
+    ms.start();
+  });
+
+  ipc.on('stop', () => {
+    ms.stop();
+  });
+
   window.onresize = () => {
     ms.windowDidResize();
   };

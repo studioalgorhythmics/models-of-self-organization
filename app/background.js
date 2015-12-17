@@ -36,6 +36,22 @@ function modelMenuItems() {
     });
     i += 1;
   });
+  items.push({
+    label: 'Play',
+    accelerator: 'Command+,',
+    click: function() {
+      BrowserWindow.getFocusedWindow()
+        .webContents.send('play');
+    }
+  });
+  items.push({
+    label: 'Stop',
+    accelerator: 'Command+.',
+    click: function() {
+      BrowserWindow.getFocusedWindow()
+        .webContents.send('stop');
+    }
+  });
   return items;
 }
 

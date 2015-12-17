@@ -162,6 +162,18 @@ export default class ModelSwitcher {
     return this.master();
   }
 
+  start() {
+    if (this.app) {
+      this.app.start();
+    }
+  }
+
+  stop() {
+    if (this.app) {
+      this.app.stop();
+    }
+  }
+
   /**
    * Spawn a model's top level output dryad.
    */
