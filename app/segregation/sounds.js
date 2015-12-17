@@ -8,11 +8,11 @@ const synth = [
   {
     defName: 'blip',
     source:
-      `{ arg out=0, freq=440, numharm=200, pan=0, timeScale=1.0, amp=1.0;
+      `{ arg out=0, freq=440, numharm=200, pan=0, timeScale=1.0, smooth=0.01, amp=1.0;
           Out.ar(out,
             Pan2.ar(
               Blip.ar(freq, numharm, amp) *
-                EnvGen.kr(Env.linen(0.01, 0.2, 0.01),
+                EnvGen.kr(Env.linen(smooth, 0.1, smooth),
                   timeScale: timeScale,
                   doneAction: 2),
               pan
@@ -34,6 +34,11 @@ const synth = [
         default: 1,
         minval: 0.1,
         maxval: 4.0
+      },
+      smooth: {
+        default: 0.1,
+        minval: 0.01,
+        maxval: 1.0
       }
     }
   },
@@ -41,12 +46,12 @@ const synth = [
   {
     defName: 'blop',
     source:
-      `{ arg out=0, freq=440, ffreq=800, rq=0.3, pan=0, timeScale=1.0, amp=1.0;
+      `{ arg out=0, freq=440, ffreq=800, rq=0.3, pan=0, timeScale=1.0, smooth=0.01, amp=1.0;
         var fenv = EnvGen.kr(Env.linen(0.05, 0.05, 0.1));
         Out.ar(out,
           Pan2.ar(
             RLPF.ar(Saw.ar(freq, amp), ffreq * fenv, rq * fenv + 0.1) *
-              EnvGen.kr(Env.linen(0.01, 0.1, 0.01),
+              EnvGen.kr(Env.linen(smooth, 0.1, smooth),
                 timeScale: timeScale,
                 doneAction: 2),
             pan
@@ -71,6 +76,11 @@ const synth = [
         default: 1,
         minval: 0.1,
         maxval: 4.0
+      },
+      smooth: {
+        default: 0.1,
+        minval: 0.01,
+        maxval: 1.0
       }
     }
   }
@@ -81,16 +91,16 @@ const ripNoise = [
     defName: 'hiss',
     source: `
     { arg out=0, ffreq=400.0, bwr=1.0,
-        decay=0.04, noise=0.03, pan=0, timeScale=1.0, amp=1.0;
+        decay=0.04, noise=0.03, pan=0, timeScale=1.0, smooth=0.01, amp=1.0;
 
       Out.ar(
         out,
         Resonz.ar(
-          PinkNoise.ar(2),
+          PinkNoise.ar(1),
           ffreq,
           bwr,
           4).distort *
-            EnvGen.kr(Env.linen(0.01, 0.1, 0.01),
+            EnvGen.kr(Env.linen(smooth, 0.1, smooth),
               levelScale: amp,
               timeScale: timeScale,
               doneAction: 2),
@@ -108,6 +118,11 @@ const ripNoise = [
         default: 1,
         minval: 0.1,
         maxval: 4.0
+      },
+      smooth: {
+        default: 0.1,
+        minval: 0.01,
+        maxval: 1.0
       }
     }
   },
@@ -116,12 +131,12 @@ const ripNoise = [
     defName: 'droner',
     source:
       `{ arg out=0, freq=440, feedback=0.0,
-          rq=0.3, pan=0, timeScale=1.0, amp=1.0;
+          rq=0.3, pan=0, timeScale=1.0, smooth=0.01, amp=1.0;
 
         Out.ar(out,
           Pan2.ar(
             SinOscFB.ar(freq, feedback) *
-              EnvGen.kr(Env.linen(0.01, 0.05, 0.01),
+              EnvGen.kr(Env.linen(smooth, 0.05, smooth),
                 timeScale: timeScale,
                 levelScale: amp * 0.6,
                 doneAction: 2),
@@ -142,6 +157,11 @@ const ripNoise = [
         default: 1,
         minval: 0.1,
         maxval: 4.0
+      },
+      smooth: {
+        default: 0.1,
+        minval: 0.01,
+        maxval: 1.0
       }
     }
   }
@@ -154,7 +174,7 @@ const pp = `
         Blip.ar(
           freq + (EnvGen.kr(Env.perc(0.1, smooth * 10)) * 40),
           numharm,
-          amp) *
+          amp * 1.5) *
             EnvGen.kr(Env.perc(0.01, smooth),
               timeScale: timeScale,
               doneAction: 2),
