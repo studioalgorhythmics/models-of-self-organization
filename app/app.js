@@ -44,6 +44,8 @@ document.addEventListener('DOMContentLoaded', function() {
     ms.windowDidResize();
   };
 
-  ms.selectModel('segregation');
+  setTimeout(() => {
+    ms.selectModel('segregation');
+  }, 1000);
 
 });
